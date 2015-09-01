@@ -19,6 +19,10 @@ public class TaggedValue<T> {
 		return this.tag;
 	}
 
+	public Value getValue() {
+		return this.value;
+	}
+
 	public void setTag(T tag) {
 		this.tag = tag;
 	}

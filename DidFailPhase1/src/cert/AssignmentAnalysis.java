@@ -1,7 +1,10 @@
 package cert;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -65,15 +68,14 @@ public class AssignmentAnalysis extends JimpleAnalysis<AssignmentMap> {
 	@Override
 	protected void flowThroughAssign(AssignmentMap in, AssignStmt s, List<AssignmentMap> fall,
 			List<AssignmentMap> branch) {
-		// List lst = new ArrayList();
-		// lst.add(stmt.getRightOp());
-		// fallOut.get(0).put(stmt.getLeftOp(), lst);
 		Value lhs = s.getLeftOp();
 		Value rhs = s.getRightOp();
 		handleAssignment(lhs, rhs, fall.get(0));
 	}
 
 	private void handleAssignment(Value lhs, Value rhs, AssignmentMap map) {
+		Set<String> actionStrings;
+
 		if (map.containsKey(rhs)) {
 			map.putAssignments(lhs, map.get(rhs));
 			System.out.println("ALIAS: " + lhs + " = " + rhs);
@@ -83,9 +85,12 @@ public class AssignmentAnalysis extends JimpleAnalysis<AssignmentMap> {
 		} else if (rhs instanceof StringConstant) {
 			map.putAssignment(lhs, new AssignedValue(rhs, ValueType.STR_CONST));
 			System.out.println("STRING CONSTANT: " + lhs + " = " + rhs);
-		} else if (isActionStringComparison(rhs, map)) {
+		} else if (!(actionStrings = getConstantsComparedToActionString(rhs, map)).isEmpty()) {
 			map.putAssignment(lhs, new AssignedValue(rhs, ValueType.ACTION_STRING_CMP));
-			System.out.println("ACTION STRING COMPARISON: " + lhs + " = " + rhs);
+			System.out.println("ACTION STRING COMPARISON");
+			for (String s : actionStrings) {
+				System.out.println("\t" + s);
+			}
 		} else if (map.containsKey(lhs)) {
 			map.remove(lhs);
 		}
@@ -99,7 +104,8 @@ public class AssignmentAnalysis extends JimpleAnalysis<AssignmentMap> {
 			AbstractBinopExpr eq = (AbstractBinopExpr) cond;
 			Value lop = eq.getOp1();
 			Value rop = eq.getOp2();
-
+			String op = cond instanceof JEqExpr ? "!=" : "==";
+			String opNeg = cond instanceof JEqExpr ? "==" : "!=";
 			Value actionStringCmp = null;
 			Value other = null;
 
@@ -138,9 +144,23 @@ public class AssignmentAnalysis extends JimpleAnalysis<AssignmentMap> {
 		return types;
 	}
 
-	private boolean isActionStringComparison(Value rhs, AssignmentMap map) {
-		if (isCallToStringEquals(rhs)) {
+	Map<ValueType, List<AssignedValue>> groupByType(AssignmentMap map, Value dest) {
+		Map<ValueType, List<AssignedValue>> grp = new HashMap<ValueType, List<AssignedValue>>();
+		for (ValueType v : ValueType.values()) {
+			grp.put(v, new ArrayList<AssignedValue>());
+		}
 
+		if (map.containsKey(dest)) {
+			for (AssignedValue v : map.get(dest)) {
+				grp.get(v.getTag()).add(v);
+			}
+		}
+		return grp;
+	}
+
+	private Set<String> getConstantsComparedToActionString(Value rhs, AssignmentMap map) {
+		Set<String> result = new HashSet<String>();
+		if (isCallToStringEquals(rhs)) {
 			InvokeExpr ie = (InvokeExpr) rhs;
 			Set<ValueBox> boxes = new HashSet<ValueBox>(rhs.getUseBoxes());
 			ValueBox argBox = ie.getArgBox(0);
@@ -153,21 +173,28 @@ public class AssignmentAnalysis extends JimpleAnalysis<AssignmentMap> {
 				break;
 			}
 
-			Set<ValueType> ropTypes = getTypes(map, rop);
-			Set<ValueType> lopTypes = getTypes(map, lop);
+			Map<ValueType, List<AssignedValue>> ropTypes = groupByType(map, rop);
+			Map<ValueType, List<AssignedValue>> lopTypes = groupByType(map, lop);
 
-			boolean ropIsStrConst = ropTypes.contains(ValueType.STR_CONST) || rop instanceof StringConstant;
-			boolean lopIsStrConst = lopTypes.contains(ValueType.STR_CONST) || lop instanceof StringConstant;
-
-			if (ropTypes.contains(ValueType.ACTION_STRING) && lopIsStrConst) {
-				return true;
+			if (!ropTypes.get(ValueType.ACTION_STRING).isEmpty()) {
+				if (lop instanceof StringConstant) {
+					result.add(((StringConstant) lop).value);
+				}
+				for (AssignedValue val : lopTypes.get(ValueType.STR_CONST)) {
+					result.add(((StringConstant) val.getValue()).value);
+				}
 			}
 
-			if (lopTypes.contains(ValueType.ACTION_STRING) && ropIsStrConst) {
-				return true;
+			if (!lopTypes.get(ValueType.ACTION_STRING).isEmpty()) {
+				if (rop instanceof StringConstant) {
+					result.add(((StringConstant) rop).value);
+				}
+				for (AssignedValue val : ropTypes.get(ValueType.STR_CONST)) {
+					result.add(((StringConstant) val.getValue()).value);
+				}
 			}
 		}
-		return false;
+		return result;
 	}
 
 	private boolean isCallToStringEquals(Value rhs) {
