@@ -1,0 +1,2 @@
+<java.lang.System: java.lang.String getenv(java.lang.String)> -> _SOURCE_
+<java.io.PrintStream: void println(java.lang.String)> -> _SINK_
