@@ -1,10 +1,8 @@
 package cert;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -24,7 +22,7 @@ import soot.jimple.internal.JEqExpr;
 import soot.jimple.internal.JNeExpr;
 import soot.toolkits.graph.UnitGraph;
 
-public class AssignmentAnalysis extends JimpleAnalysis<AssignmentMap> {
+public class AssignmentAnalysis extends JimpleAnalysis<FlowStorage> {
 
 	private IntentOracle io;
 	private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -36,17 +34,28 @@ public class AssignmentAnalysis extends JimpleAnalysis<AssignmentMap> {
 	}
 
 	@Override
-	protected void flowThrough(AssignmentMap in, Unit s, List<AssignmentMap> fall, List<AssignmentMap> branch) {
-		for (AssignmentMap map : fall) {
-			map.putAll(in);
+	protected void flowThrough(FlowStorage in, Unit s, List<FlowStorage> fall, List<FlowStorage> branch) {
+
+		System.out.println(s);
+		try {
+			if (in.constraints.size() > 0) {
+				for (ActionStringConstraint a : in.constraints) {
+					System.out.println("(" + a.getActionString() + "," + a.getIsComplement() + ")");
+				}
+			}
+			for (FlowStorage map : fall) {
+				in.copy(map);
+			}
+			for (FlowStorage map : branch) {
+				in.copy(map);
+			}
+			super.flowThrough(in, s, fall, branch);
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
-		for (AssignmentMap map : branch) {
-			map.putAll(in);
-		}
-		super.flowThrough(in, s, fall, branch);
 	}
 
-	private void printAssignments(AssignmentMap m) {
+	private void printAssignments(FlowStorage m) {
 		System.out.println("Assignments");
 		System.out.println("-----------------");
 		for (Object key : m.keySet()) {
@@ -66,18 +75,17 @@ public class AssignmentAnalysis extends JimpleAnalysis<AssignmentMap> {
 	}
 
 	@Override
-	protected void flowThroughAssign(AssignmentMap in, AssignStmt s, List<AssignmentMap> fall,
-			List<AssignmentMap> branch) {
+	protected void flowThroughAssign(FlowStorage in, AssignStmt s, List<FlowStorage> fall, List<FlowStorage> branch) {
 		Value lhs = s.getLeftOp();
 		Value rhs = s.getRightOp();
 		handleAssignment(lhs, rhs, fall.get(0));
 	}
 
-	private void handleAssignment(Value lhs, Value rhs, AssignmentMap map) {
+	private void handleAssignment(Value lhs, Value rhs, FlowStorage map) {
 		Set<String> actionStrings;
 
 		if (map.containsKey(rhs)) {
-			map.putAssignments(lhs, map.get(rhs));
+			map.copy(rhs, lhs);
 			System.out.println("ALIAS: " + lhs + " = " + rhs);
 		} else if (isCallToGetAction(rhs)) {
 			map.putAssignment(lhs, new AssignedValue(rhs, ValueType.ACTION_STRING));
@@ -86,39 +94,59 @@ public class AssignmentAnalysis extends JimpleAnalysis<AssignmentMap> {
 			map.putAssignment(lhs, new AssignedValue(rhs, ValueType.STR_CONST));
 			System.out.println("STRING CONSTANT: " + lhs + " = " + rhs);
 		} else if (!(actionStrings = getConstantsComparedToActionString(rhs, map)).isEmpty()) {
-			map.putAssignment(lhs, new AssignedValue(rhs, ValueType.ACTION_STRING_CMP));
-			System.out.println("ACTION STRING COMPARISON");
+			System.out.println("ACTION STRING COMPARISON: " + lhs + " = " + rhs);
+			List<AssignedValue> values = new ArrayList<AssignedValue>();
+			AssignedValue val;
 			for (String s : actionStrings) {
-				System.out.println("\t" + s);
+				StringConstant sc = StringConstant.v(s);
+				val = new AssignedValue(sc, ValueType.ACTION_STRING_CMP);
+				values.add(val);
 			}
+			map.putAssignments(lhs, values);
 		} else if (map.containsKey(lhs)) {
 			map.remove(lhs);
 		}
 	}
 
 	@Override
-	protected void flowThroughIf(AssignmentMap in, IfStmt stmt, List<AssignmentMap> fall, List<AssignmentMap> branch) {
+	protected void flowThroughIf(FlowStorage in, IfStmt stmt, List<FlowStorage> fall, List<FlowStorage> branch) {
 		Value cond = stmt.getCondition();
 
 		if (cond instanceof JEqExpr || cond instanceof JNeExpr) {
 			AbstractBinopExpr eq = (AbstractBinopExpr) cond;
 			Value lop = eq.getOp1();
 			Value rop = eq.getOp2();
-			String op = cond instanceof JEqExpr ? "!=" : "==";
-			String opNeg = cond instanceof JEqExpr ? "==" : "!=";
-			Value actionStringCmp = null;
-			Value other = null;
+			boolean stringEquals = cond instanceof JNeExpr;
 
-			if (getTypes(in, lop).contains(ValueType.ACTION_STRING_CMP)) {
-				actionStringCmp = lop;
-				other = rop;
-			} else if (getTypes(in, rop).contains(ValueType.ACTION_STRING_CMP)) {
-				actionStringCmp = rop;
-				other = lop;
+			Set<String> actionStrings = new HashSet<String>();
+			if (in.containsKey(lop)) {
+				ValueTypeMap lopTypes = in.get(lop);
+				for (AssignedValue val : lopTypes.get(ValueType.ACTION_STRING_CMP)) {
+					actionStrings.add(((StringConstant) val.getValue()).value);
+				}
 			}
 
-			if (actionStringCmp != null && other != null) {
-				System.out.println("BRANCH: " + stmt);
+			if (in.containsKey(rop)) {
+				ValueTypeMap ropTypes = in.get(rop);
+				for (AssignedValue val : ropTypes.get(ValueType.ACTION_STRING_CMP)) {
+					actionStrings.add(((StringConstant) val.getValue()).value);
+				}
+			}
+
+			if (stringEquals) {
+				System.out.println("ACTION STRING EQUALS: " + stmt);
+				for (String s : actionStrings) {
+					System.out.println("STRING:" + s);
+					branch.get(0).constraints.add(new ActionStringConstraint(s, false));
+					fall.get(0).constraints.add(new ActionStringConstraint(s, true));
+				}
+			} else {
+				System.out.println("ACTION STRING NOT EQUALS: " + stmt);
+				for (String s : actionStrings) {
+					System.out.println("STRING:" + s);
+					branch.get(0).constraints.add(new ActionStringConstraint(s, true));
+					fall.get(0).constraints.add(new ActionStringConstraint(s, false));
+				}
 			}
 		}
 	}
@@ -134,31 +162,7 @@ public class AssignmentAnalysis extends JimpleAnalysis<AssignmentMap> {
 		return false;
 	}
 
-	Set<ValueType> getTypes(AssignmentMap map, Value dest) {
-		Set<ValueType> types = new HashSet<ValueType>();
-		if (map.containsKey(dest)) {
-			for (AssignedValue v : map.get(dest)) {
-				types.add(v.getTag());
-			}
-		}
-		return types;
-	}
-
-	Map<ValueType, List<AssignedValue>> groupByType(AssignmentMap map, Value dest) {
-		Map<ValueType, List<AssignedValue>> grp = new HashMap<ValueType, List<AssignedValue>>();
-		for (ValueType v : ValueType.values()) {
-			grp.put(v, new ArrayList<AssignedValue>());
-		}
-
-		if (map.containsKey(dest)) {
-			for (AssignedValue v : map.get(dest)) {
-				grp.get(v.getTag()).add(v);
-			}
-		}
-		return grp;
-	}
-
-	private Set<String> getConstantsComparedToActionString(Value rhs, AssignmentMap map) {
+	private Set<String> getConstantsComparedToActionString(Value rhs, FlowStorage map) {
 		Set<String> result = new HashSet<String>();
 		if (isCallToStringEquals(rhs)) {
 			InvokeExpr ie = (InvokeExpr) rhs;
@@ -173,8 +177,14 @@ public class AssignmentAnalysis extends JimpleAnalysis<AssignmentMap> {
 				break;
 			}
 
-			Map<ValueType, List<AssignedValue>> ropTypes = groupByType(map, rop);
-			Map<ValueType, List<AssignedValue>> lopTypes = groupByType(map, lop);
+			ValueTypeMap lopTypes = new ValueTypeMap();
+			ValueTypeMap ropTypes = new ValueTypeMap();
+			if (map.containsKey(lop)) {
+				lopTypes = map.get(lop);
+			}
+			if (map.containsKey(rop)) {
+				ropTypes = map.get(rop);
+			}
 
 			if (!ropTypes.get(ValueType.ACTION_STRING).isEmpty()) {
 				if (lop instanceof StringConstant) {
@@ -215,24 +225,19 @@ public class AssignmentAnalysis extends JimpleAnalysis<AssignmentMap> {
 	}
 
 	@Override
-	protected AssignmentMap newInitialFlow() {
-		return new AssignmentMap();
+	protected FlowStorage newInitialFlow() {
+		return new FlowStorage();
 	}
 
 	@Override
-	protected void merge(AssignmentMap in1, AssignmentMap in2, AssignmentMap out) {
-		out.putAll((in1));
-		for (Value key : in2.keySet()) {
-			if (out.containsKey(key)) {
-				out.addAllAssignments(key, in2.get(key));
-			} else {
-				out.put(key, in2.get(key));
-			}
-		}
+	protected void merge(FlowStorage in1, FlowStorage in2, FlowStorage out) {
+		out.empty();
+		in1.merge(in2, out);
 	}
 
 	@Override
-	protected void copy(AssignmentMap source, AssignmentMap dest) {
-		dest.putAll(source);
+	protected void copy(FlowStorage source, FlowStorage dest) {
+		dest.empty();
+		source.copy(dest);
 	}
 }

@@ -67,22 +67,31 @@ public class DidfailPhase1 {
 
 		@Override
 		public void onBeforeCallgraphConstruction() {
-			PackManager.v().getPack("wjap").add(new Transform("wjap.myTransform", new SceneTransformer() {
-				@Override
-				protected void internalTransform(String phaseName, Map<String, String> options) {
-					for (SootClass sc : Scene.v().getClasses()) {
-						for (SootMethod m : sc.getMethods()) {
-							if (m.getName().startsWith("test"))
-								try {
-									Body b = m.retrieveActiveBody();
-									new AssignmentAnalysis(new ExceptionalUnitGraph(b));
-								} catch (Exception e) {
-									continue;
+			PackManager
+					.v()
+					.getPack("wjap")
+					.add(new Transform("wjap.myTransform",
+							new SceneTransformer() {
+								@Override
+								protected void internalTransform(
+										String phaseName,
+										Map<String, String> options) {
+									for (SootClass sc : Scene.v().getClasses()) {
+										for (SootMethod m : sc.getMethods()) {
+											if (m.getName().startsWith("test"))
+												try {
+													Body b = m
+															.retrieveActiveBody();
+													new AssignmentAnalysis(
+															new ExceptionalUnitGraph(
+																	b));
+												} catch (Exception e) {
+													continue;
+												}
+										}
+									}
 								}
-						}
-					}
-				}
-			}));
+							}));
 		}
 
 		@Override
@@ -91,7 +100,8 @@ public class DidfailPhase1 {
 		}
 	}
 
-	private static final class DidfailResultHandler extends AndroidInfoflowResultsHandler {
+	private static final class DidfailResultHandler extends
+			AndroidInfoflowResultsHandler {
 		private BufferedWriter wr;
 
 		private DidfailResultHandler() {
@@ -102,7 +112,8 @@ public class DidfailPhase1 {
 			this.wr = wr;
 		}
 
-		public void handleSink(ResultSinkInfo sinkInfo, IInfoflowCFG cfg, InfoflowResults results) {
+		public void handleSink(ResultSinkInfo sinkInfo, IInfoflowCFG cfg,
+				InfoflowResults results) {
 			Stmt sink = sinkInfo.getSink();
 			String methSig = getMethSig(sink);
 			printf("\t<sink method=\"%s\"", escapeXML(methSig));
@@ -137,7 +148,8 @@ public class DidfailPhase1 {
 			println("></sink>");
 		}
 
-		public void handleSource(ResultSourceInfo srcInfo, IInfoflowCFG cfg, InfoflowResults results) {
+		public void handleSource(ResultSourceInfo srcInfo, IInfoflowCFG cfg,
+				InfoflowResults results) {
 			Stmt src = srcInfo.getSource();
 			SootMethod sm = cfg.getMethodOf(src);
 			String methName = sm.getName();
@@ -340,6 +352,7 @@ public class DidfailPhase1 {
 			scanner.close();
 		}
 	}
+
 	// BEGIN DIDFAIL ADDITIONS
 
 	public static boolean isIntentSink(Stmt stmt) {
@@ -348,12 +361,14 @@ public class DidfailPhase1 {
 		}
 		AbstractInvokeExpr ie = (AbstractInvokeExpr) stmt.getInvokeExpr();
 		SootMethod meth = ie.getMethod();
-		SootClass android_content_Context = Scene.v().getSootClass("android.content.Context");
+		SootClass android_content_Context = Scene.v().getSootClass(
+				"android.content.Context");
 		// FIXME: Check the method name better!
 		if (meth.toString().indexOf("startActivity") == -1) {
 			return false;
 		}
-		return ((new Hierarchy()).isClassSuperclassOfIncluding(android_content_Context, meth.getDeclaringClass()));
+		return ((new Hierarchy()).isClassSuperclassOfIncluding(
+				android_content_Context, meth.getDeclaringClass()));
 	}
 
 	public static boolean isIntentResultSink(Stmt stmt) {
@@ -362,11 +377,13 @@ public class DidfailPhase1 {
 		}
 		AbstractInvokeExpr ie = (AbstractInvokeExpr) stmt.getInvokeExpr();
 		SootMethod meth = ie.getMethod();
-		SootClass android_content_Context = Scene.v().getSootClass("android.app.Activity");
+		SootClass android_content_Context = Scene.v().getSootClass(
+				"android.app.Activity");
 		if (meth.toString().indexOf("setResult") == -1) {
 			return false;
 		}
-		return ((new Hierarchy()).isClassSuperclassOfIncluding(android_content_Context, meth.getDeclaringClass()));
+		return ((new Hierarchy()).isClassSuperclassOfIncluding(
+				android_content_Context, meth.getDeclaringClass()));
 	}
 
 	public static String extractIntentID(Stmt prevStmt) {
@@ -374,10 +391,10 @@ public class DidfailPhase1 {
 			if (!prevStmt.containsInvokeExpr()) {
 				return "";
 			}
-			AbstractInvokeExpr ie = (AbstractInvokeExpr) prevStmt.getInvokeExpr();
+			AbstractInvokeExpr ie = (AbstractInvokeExpr) prevStmt
+					.getInvokeExpr();
 			String sig = ie.getMethod().getSignature();
-			if (!sig.equals(
-					"<android.content.Intent: android.content.Intent putExtra(java.lang.String,java.lang.String)>")) {
+			if (!sig.equals("<android.content.Intent: android.content.Intent putExtra(java.lang.String,java.lang.String)>")) {
 				return "";
 			}
 			StringConstant ret = (StringConstant) ie.getArg(0);
@@ -387,11 +404,13 @@ public class DidfailPhase1 {
 		}
 	}
 
-	public static void main(final String[] args) throws IOException, InterruptedException, XmlPullParserException {
+	public static void main(final String[] args) throws IOException,
+			InterruptedException, XmlPullParserException {
 
 		DidfailArgs jct = new DidfailArgs();
 		new JCommander(jct, args);
-		InfoflowAndroidConfiguration config = FlowDroidFactory.configFromJson(readFile(jct.config));
+		InfoflowAndroidConfiguration config = FlowDroidFactory
+				.configFromJson(readFile(jct.config));
 		SetupApplication app = new SetupApplication(jct.platforms, jct.apk);
 		app.setConfig(config);
 		app.setTaintWrapper(null);

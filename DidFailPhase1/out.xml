@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<results package="">
+<flow>
+	<sink method="&lt;java.io.PrintStream: void println(java.lang.String)&gt;"></sink>
+	<source method="&lt;java.lang.System: java.lang.String getenv(java.lang.String)&gt;" in="test1"></source>
+</flow>
+</results>

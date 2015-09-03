@@ -1,10 +1,11 @@
 package cert;
+
 import soot.SootClass;
 import soot.SootMethod;
 import soot.Value;
 
 public class AndroidIntentOracle implements IntentOracle {
-	
+
 	@Override
 	public boolean isGetAction(SootMethod sm) {
 		SootClass sc = sm.getDeclaringClass();
