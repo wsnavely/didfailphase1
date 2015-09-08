@@ -35,14 +35,17 @@ public class AssignmentAnalysis extends JimpleAnalysis<FlowStorage> {
 
 	@Override
 	protected void flowThrough(FlowStorage in, Unit s, List<FlowStorage> fall, List<FlowStorage> branch) {
-
-		System.out.println(s);
 		try {
-			if (in.constraints.size() > 0) {
-				for (ActionStringConstraint a : in.constraints) {
-					System.out.println("(" + a.getActionString() + "," + a.getIsComplement() + ")");
-				}
+			ActionStringConstraintSet cs = in.getConstraintSet();
+			for (String p : cs.getPositive()) {
+				logger.debug("CONSTRAINT: " + p);
+				s.addTag(new PathConstraintTag(p, false));
 			}
+			for (String p : cs.getNegative()) {
+				logger.debug("CONSTRAINT: !(" + p + ")");
+				s.addTag(new PathConstraintTag(p, true));
+			}
+
 			for (FlowStorage map : fall) {
 				in.copy(map);
 			}
@@ -53,25 +56,6 @@ public class AssignmentAnalysis extends JimpleAnalysis<FlowStorage> {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-	}
-
-	private void printAssignments(FlowStorage m) {
-		System.out.println("Assignments");
-		System.out.println("-----------------");
-		for (Object key : m.keySet()) {
-			System.out.print(key + ": ");
-			boolean first = true;
-			for (Object val : (List) m.get(key)) {
-				if (first) {
-					first = false;
-				} else {
-					System.out.print(", ");
-				}
-				System.out.print(val);
-			}
-			System.out.println();
-		}
-		System.out.println("-----------------");
 	}
 
 	@Override
@@ -86,15 +70,15 @@ public class AssignmentAnalysis extends JimpleAnalysis<FlowStorage> {
 
 		if (map.containsKey(rhs)) {
 			map.copy(rhs, lhs);
-			System.out.println("ALIAS: " + lhs + " = " + rhs);
+			logger.debug("ALIAS: " + lhs + " = " + rhs);
 		} else if (isCallToGetAction(rhs)) {
 			map.putAssignment(lhs, new AssignedValue(rhs, ValueType.ACTION_STRING));
-			System.out.println("ACTION STRING: " + lhs + " = " + rhs);
+			logger.debug("ACTION STRING: " + lhs + " = " + rhs);
 		} else if (rhs instanceof StringConstant) {
 			map.putAssignment(lhs, new AssignedValue(rhs, ValueType.STR_CONST));
-			System.out.println("STRING CONSTANT: " + lhs + " = " + rhs);
+			logger.debug("STRING CONSTANT: " + lhs + " = " + rhs);
 		} else if (!(actionStrings = getConstantsComparedToActionString(rhs, map)).isEmpty()) {
-			System.out.println("ACTION STRING COMPARISON: " + lhs + " = " + rhs);
+			logger.debug("ACTION STRING COMPARISON: " + lhs + " = " + rhs);
 			List<AssignedValue> values = new ArrayList<AssignedValue>();
 			AssignedValue val;
 			for (String s : actionStrings) {
@@ -134,18 +118,16 @@ public class AssignmentAnalysis extends JimpleAnalysis<FlowStorage> {
 			}
 
 			if (stringEquals) {
-				System.out.println("ACTION STRING EQUALS: " + stmt);
+				logger.debug("ACTION STRING EQUALS: " + stmt);
 				for (String s : actionStrings) {
-					System.out.println("STRING:" + s);
-					branch.get(0).constraints.add(new ActionStringConstraint(s, false));
-					fall.get(0).constraints.add(new ActionStringConstraint(s, true));
+					branch.get(0).andConstraint(s, false);
+					fall.get(0).andConstraint(s, true);
 				}
 			} else {
-				System.out.println("ACTION STRING NOT EQUALS: " + stmt);
+				logger.debug("ACTION STRING NOT EQUALS: " + stmt);
 				for (String s : actionStrings) {
-					System.out.println("STRING:" + s);
-					branch.get(0).constraints.add(new ActionStringConstraint(s, true));
-					fall.get(0).constraints.add(new ActionStringConstraint(s, false));
+					branch.get(0).andConstraint(s, true);
+					fall.get(0).andConstraint(s, false);
 				}
 			}
 		}
@@ -231,13 +213,13 @@ public class AssignmentAnalysis extends JimpleAnalysis<FlowStorage> {
 
 	@Override
 	protected void merge(FlowStorage in1, FlowStorage in2, FlowStorage out) {
-		out.empty();
+		out.clear();
 		in1.merge(in2, out);
 	}
 
 	@Override
 	protected void copy(FlowStorage source, FlowStorage dest) {
-		dest.empty();
+		dest.clear();
 		source.copy(dest);
 	}
 }

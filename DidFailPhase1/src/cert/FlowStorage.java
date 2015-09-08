@@ -2,17 +2,17 @@ package cert;
 
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
 
 import soot.Value;
 
 @SuppressWarnings("serial")
 public class FlowStorage extends HashMap<Value, ValueTypeMap> {
-	Set<ActionStringConstraint> constraints;
+	// Set<ActionStringConstraint> constraints;
+	private ActionStringConstraintSet constraints;
 
 	public FlowStorage() {
-		constraints = new HashSet<ActionStringConstraint>();
+		// constraints = new HashSet<ActionStringConstraint>();
+		constraints = new ActionStringConstraintSet();
 	}
 
 	public void putAssignment(Value s, AssignedValue v) {
@@ -53,12 +53,10 @@ public class FlowStorage extends HashMap<Value, ValueTypeMap> {
 	}
 
 	public void addAssignment(Value s, AssignedValue v) {
-		System.out.println("Add Assignment: " + s + "," + v);
 		if (!this.containsKey(s)) {
 			this.put(s, new ValueTypeMap());
 		}
 		this.get(s).addValue(v);
-		System.out.println("Added Assignment");
 	}
 
 	public void addAllAssignments(Value s, Collection<AssignedValue> vs) {
@@ -67,9 +65,9 @@ public class FlowStorage extends HashMap<Value, ValueTypeMap> {
 		}
 	}
 
-	public void empty() {
-		this.clear();
-		this.constraints.clear();
+	public void clear() {
+		super.clear();
+		this.constraints.reset();
 	}
 
 	public void copy(FlowStorage dest) {
@@ -79,21 +77,13 @@ public class FlowStorage extends HashMap<Value, ValueTypeMap> {
 		}
 
 		// Copy constraints
-		for (ActionStringConstraint asc : this.constraints) {
-			dest.constraints.add(asc.clone());
-		}
+		this.constraints.copy(dest.constraints);
 	}
 
 	public void merge(FlowStorage in2, FlowStorage out) {
 		this.copy(out);
-		System.out.println("merge");
-		// Copy remaining constraints
 
 		try {
-			for (ActionStringConstraint asc : in2.constraints) {
-				out.constraints.add(asc.clone());
-			}
-
 			for (Value key : in2.keySet()) {
 				if (out.containsKey(key)) {
 					ValueTypeMap vtm = in2.get(key);
@@ -104,9 +94,33 @@ public class FlowStorage extends HashMap<Value, ValueTypeMap> {
 					out.put(key, in2.get(key).clone());
 				}
 			}
+
+			for (String p : in2.constraints.getPositive()) {
+				out.constraints.or(p, false);
+			}
+			for (String p : in2.constraints.getNegative()) {
+				out.constraints.or(p, true);
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
 
+	public void andConstraint(String s, boolean not) {
+		this.constraints.and(s, not);
+	}
+
+	public ActionStringConstraintSet getConstraintSet() {
+		return this.constraints;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		return true;
+	}
+
+	@Override
+	public int hashCode() {
+		return this.hashCode();
 	}
 }
