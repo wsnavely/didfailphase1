@@ -29,7 +29,6 @@ import soot.Transform;
 import soot.jimple.Stmt;
 import soot.jimple.StringConstant;
 import soot.jimple.infoflow.android.InfoflowAndroidConfiguration;
-import soot.jimple.infoflow.android.SetupApplication;
 import soot.jimple.infoflow.handlers.PreAnalysisHandler;
 import soot.jimple.infoflow.handlers.ResultsAvailableHandler;
 import soot.jimple.infoflow.results.InfoflowResults;
@@ -74,7 +73,7 @@ public class ActionStringSinkAnalysis {
 						if (sc.getName().startsWith("android")) {
 							continue;
 						}
-						
+
 						if (sc.getName().startsWith("java")) {
 							continue;
 						}
@@ -82,11 +81,9 @@ public class ActionStringSinkAnalysis {
 
 						for (SootMethod m : sc.getMethods()) {
 							try {
-								System.out.println("Analyzing: " + m.getName());
 								Body b = m.retrieveActiveBody();
 								new AssignmentAnalysis(new ExceptionalUnitGraph(b));
 							} catch (Exception e) {
-								System.out.println("ERROR: " + e.getMessage());
 								continue;
 							}
 						}
@@ -150,6 +147,7 @@ public class ActionStringSinkAnalysis {
 			String json = generator.generateJson(data);
 			System.out.println(json);
 			output(json);
+
 		}
 
 		public void output(String s) {
@@ -241,13 +239,12 @@ public class ActionStringSinkAnalysis {
 			return "";
 		}
 	}
-	
 
 	public static void main(final String[] args) throws IOException, InterruptedException, XmlPullParserException {
 		DidfailArgs jct = new DidfailArgs();
 		new JCommander(jct, args);
 		InfoflowAndroidConfiguration config = FlowDroidFactory.configFromJson(readFile(jct.config));
-		SetupApplication app = new SetupApplication(jct.platforms, jct.apk);
+		MySetupApplication app = new MySetupApplication(jct.platforms, jct.apk);
 		app.setConfig(config);
 		app.setTaintWrapper(null);
 		app.calculateSourcesSinksEntrypoints(jct.sourcesAndSinks);
