@@ -227,7 +227,7 @@ public class DidfailPhase1 {
 			Options.v().set_output_format(Options.output_format_dex);
 			PackManager.v().getPack("wjtp").add(new Transform("wjtp.myInstrumenter", new SinkLabeler()));
 			PackManager.v().getPack("wjtp").apply();
-			// PackManager.v().writeOutput();
+			PackManager.v().writeOutput();
 		}
 
 		@Override

@@ -109,6 +109,7 @@ public class SinkLabeler extends SceneTransformer {
 				try {
 					Body b = m.retrieveActiveBody();
 					transform(b);
+					b.validate();
 				} catch (Exception e) {
 					continue;
 				}
