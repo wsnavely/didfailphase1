@@ -35,6 +35,7 @@ import soot.jimple.infoflow.results.InfoflowResults;
 import soot.jimple.infoflow.results.ResultSinkInfo;
 import soot.jimple.infoflow.results.ResultSourceInfo;
 import soot.jimple.infoflow.solver.cfg.IInfoflowCFG;
+import soot.jimple.infoflow.taintWrappers.EasyTaintWrapper;
 import soot.jimple.internal.AbstractInvokeExpr;
 import soot.tagkit.Tag;
 import soot.toolkits.graph.ExceptionalUnitGraph;
@@ -59,6 +60,9 @@ public class ActionStringSinkAnalysis {
 
 		@Parameter(names = "-ss")
 		private String sourcesAndSinks;
+		
+		@Parameter(names = "-tw")
+		private String taintWrapper;
 	}
 
 	private static class MyPreprocessor implements PreAnalysisHandler {
@@ -77,8 +81,6 @@ public class ActionStringSinkAnalysis {
 						if (sc.getName().startsWith("java")) {
 							continue;
 						}
-						System.out.println(sc.getName());
-
 						for (SootMethod m : sc.getMethods()) {
 							try {
 								Body b = m.retrieveActiveBody();
@@ -246,7 +248,12 @@ public class ActionStringSinkAnalysis {
 		InfoflowAndroidConfiguration config = FlowDroidFactory.configFromJson(readFile(jct.config));
 		MySetupApplication app = new MySetupApplication(jct.platforms, jct.apk);
 		app.setConfig(config);
-		app.setTaintWrapper(null);
+		
+		EasyTaintWrapper easyTaintWrapper;
+		easyTaintWrapper = new EasyTaintWrapper(jct.taintWrapper);
+		easyTaintWrapper.setAggressiveMode(true);
+		app.setTaintWrapper(easyTaintWrapper);
+		
 		app.calculateSourcesSinksEntrypoints(jct.sourcesAndSinks);
 
 		BufferedWriter bw = null;

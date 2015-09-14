@@ -2,9 +2,9 @@ package cert;
 
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.StringWriter;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -18,6 +18,10 @@ import org.xmlpull.v1.XmlPullParserException;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 
+import nu.xom.Attribute;
+import nu.xom.Document;
+import nu.xom.Element;
+import nu.xom.Serializer;
 import soot.Body;
 import soot.Hierarchy;
 import soot.PackManager;
@@ -39,7 +43,7 @@ import soot.jimple.infoflow.solver.cfg.IInfoflowCFG;
 import soot.jimple.infoflow.taintWrappers.EasyTaintWrapper;
 import soot.jimple.internal.AbstractInstanceInvokeExpr;
 import soot.jimple.internal.AbstractInvokeExpr;
-import soot.options.Options;
+import soot.tagkit.Tag;
 import soot.toolkits.graph.ExceptionalUnitGraph;
 import soot.util.MultiMap;
 
@@ -49,23 +53,23 @@ public class DidfailPhase1 {
 		@Parameter
 		private List<String> parameters = new ArrayList<String>();
 
-		@Parameter(names = "-apk")
+		@Parameter(names = "-apk", required = true)
 		private String apk;
 
-		@Parameter(names = "-platforms")
+		@Parameter(names = "-platforms", required = true)
 		private String platforms;
 
 		@Parameter(names = "-out")
-		private String outfile;
+		private String outfile = null;
 
 		@Parameter(names = "-config")
 		private String config;
 
 		@Parameter(names = "-ss")
-		private String sourcesAndSinks;
+		private String sourcesAndSinks = "SourcesAndSinks.txt";
 
 		@Parameter(names = "-tw")
-		private String taintWrapper;
+		private String taintWrapper = null;
 	}
 
 	private static class DidfailPreprocessor implements PreAnalysisHandler {
@@ -77,13 +81,12 @@ public class DidfailPhase1 {
 				protected void internalTransform(String phaseName, Map<String, String> options) {
 					for (SootClass sc : Scene.v().getClasses()) {
 						for (SootMethod m : sc.getMethods()) {
-							if (m.getName().startsWith("test"))
-								try {
-									Body b = m.retrieveActiveBody();
-									new AssignmentAnalysis(new ExceptionalUnitGraph(b));
-								} catch (Exception e) {
-									continue;
-								}
+							try {
+								Body b = m.retrieveActiveBody();
+								new AssignmentAnalysis(new ExceptionalUnitGraph(b));
+							} catch (Exception e) {
+								continue;
+							}
 						}
 					}
 				}
@@ -97,68 +100,78 @@ public class DidfailPhase1 {
 	}
 
 	private static final class DidfailResultHandler extends AndroidInfoflowResultsHandler {
-		private BufferedWriter wr;
+		private File output;
 		private int intentId = 1;
 
 		private DidfailResultHandler() {
-			this.wr = null;
+			this.output = null;
 		}
 
-		private DidfailResultHandler(BufferedWriter wr) {
-			this.wr = wr;
+		private DidfailResultHandler(File output) {
+			this.output = output;
 		}
 
-		public void handleSink(ResultSinkInfo sinkInfo, IInfoflowCFG cfg, InfoflowResults results) {
+		public Element handleSink(ResultSinkInfo sinkInfo, IInfoflowCFG cfg, InfoflowResults results) {
 			Stmt sink = sinkInfo.getSink();
-			String methSig = getMethSig(sink);
-			printf("\t<sink method=\"%s\"", escapeXML(methSig));
-			sink.addTag(new SinkTag(this.intentId));
-			this.intentId++;
+			Element sinkElem = new Element("sink");
+			sinkElem.addAttribute(new Attribute("method", getMethSig(sink)));
 
 			if (isIntentSink(sink)) {
-				printf(" is-intent=\"1\"");
-				printf(" intent-id=\"%s\"", this.intentId);
+				sinkElem.addAttribute(new Attribute("is-intent", "1"));
+				sinkElem.addAttribute(new Attribute("intent-id", Integer.toString(this.intentId)));
 				sink.addTag(new SinkTag(this.intentId));
 				this.intentId++;
+
+				for (Tag tag : sink.getTags()) {
+					if (tag instanceof PathConstraintTag) {
+						PathConstraintTag pct = (PathConstraintTag) tag;
+						Element constraint = new Element("constraint");
+						constraint.addAttribute(new Attribute("name", pct.string));
+						constraint.addAttribute(new Attribute("cmp", Boolean.toString(pct.negate)));
+						sinkElem.appendChild(constraint);
+					}
+				}
 
 				try {
 					InvokeExpr ie = sink.getInvokeExpr();
 					AbstractInstanceInvokeExpr aie = (AbstractInstanceInvokeExpr) ie;
 					Type baseType = aie.getBase().getType();
-					String cmp = escapeXML(baseType.toString());
-					printf(" component=\"%s\"", cmp);
+					String cmp = baseType.toString();
+					sinkElem.addAttribute(new Attribute("component", cmp));
 				} catch (Exception e) {
 				}
 			}
 			if (isIntentResultSink(sink)) {
-				print(" is-intent-result=\"1\"");
 				SootMethod sm = cfg.getMethodOf(sink);
 				SootClass cls = sm.getDeclaringClass();
-				String cmp = escapeXML(cls.toString());
-				printf(" component=\"%s\"", cmp);
+				String cmp = cls.toString();
+				sinkElem.addAttribute(new Attribute("is-intent-result", "1"));
+				sinkElem.addAttribute(new Attribute("component", cmp));
 			}
-			println("></sink>");
+
+			return sinkElem;
 		}
 
-		public void handleSource(ResultSourceInfo srcInfo, IInfoflowCFG cfg, InfoflowResults results) {
+		public Element handleSource(ResultSourceInfo srcInfo, IInfoflowCFG cfg, InfoflowResults results) {
 			Stmt src = srcInfo.getSource();
+			Element srcElem = new Element("source");
 			SootMethod sm = cfg.getMethodOf(src);
 			String methName = sm.getName();
 			String methSig = getMethSig(srcInfo.getSource());
-			printf("\t<source method=\"%s\"", escapeXML(methSig));
+			srcElem.addAttribute(new Attribute("method", methSig));
+			srcElem.addAttribute(new Attribute("in", methName));
 			if (methSig.indexOf(" getIntent()") != -1) {
 				InvokeExpr ie = src.getInvokeExpr();
 				AbstractInstanceInvokeExpr aie = (AbstractInstanceInvokeExpr) ie;
 				Type baseType = aie.getBase().getType();
-				String cmp = escapeXML(baseType.toString());
-				printf(" component=\"%s\"", cmp);
+				String cmp = baseType.toString();
+				srcElem.addAttribute(new Attribute("component", cmp));
 			} else if (methSig.indexOf(":= @parameter") != -1) {
 				SootClass cls = sm.getDeclaringClass();
-				String cmp = escapeXML(cls.toString());
-				printf(" component=\"%s\"", cmp);
+				String cmp = cls.toString();
+				srcElem.addAttribute(new Attribute("component", cmp));
 			}
-			printf(" in=\"%s\"", escapeXML(methName));
-			println("></source>");
+			return srcElem;
 		}
 
 		public String getMethSig(Stmt stmt) {
@@ -193,132 +206,79 @@ public class DidfailPhase1 {
 			}
 		}
 
-		public void handleResults(IInfoflowCFG cfg, InfoflowResults results) {
-			if (results == null) {
-				print("No results found.");
-				return;
-			}
-			MultiMap<ResultSinkInfo, ResultSourceInfo> resultInfos;
-			resultInfos = results.getResults();
-			Comparator<ResultSinkInfo> sinkSorter = new SinkComparator();
-			Comparator<ResultSourceInfo> sourceSorter = new SourceComparator();
-			String pkg = escapeXML(this.getAppPackage());
-			// Sort the sinks
-			Set<ResultSinkInfo> sinkSet = results.getResults().keySet();
-			List<ResultSinkInfo> sinks = new ArrayList<ResultSinkInfo>();
-			sinks.addAll(sinkSet);
-			Collections.sort(sinks, sinkSorter);
-			println("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
-			printf("<results package=\"%s\">\n", pkg);
-			for (ResultSinkInfo sinkInfo : sinks) {
-				println("<flow>");
-				handleSink(sinkInfo, cfg, results);
-				Set<ResultSourceInfo> srcSet = resultInfos.get(sinkInfo);
-				List<ResultSourceInfo> srcs = new ArrayList<ResultSourceInfo>();
-				srcs.addAll(srcSet);
-				Collections.sort(srcs, sourceSorter);
-				for (ResultSourceInfo srcInfo : srcs) {
-					handleSource(srcInfo, cfg, results);
-				}
-				println("</flow>");
-			}
-			println("</results>");
+		public Element handleResults(IInfoflowCFG cfg, InfoflowResults results) {
+			Element root = new Element("results");
+			root.addAttribute(new Attribute("package", this.getAppPackage()));
 
-			Options.v().set_output_format(Options.output_format_dex);
-			PackManager.v().getPack("wjtp").add(new Transform("wjtp.myInstrumenter", new SinkLabeler()));
-			PackManager.v().getPack("wjtp").apply();
-			PackManager.v().writeOutput();
+			if (results != null) {
+				MultiMap<ResultSinkInfo, ResultSourceInfo> resultInfos;
+				resultInfos = results.getResults();
+				Comparator<ResultSinkInfo> sinkSorter = new SinkComparator();
+				Comparator<ResultSourceInfo> sourceSorter = new SourceComparator();
+
+				// Sort the sinks
+				Set<ResultSinkInfo> sinkSet = results.getResults().keySet();
+				List<ResultSinkInfo> sinks = new ArrayList<ResultSinkInfo>(sinkSet);
+				Collections.sort(sinks, sinkSorter);
+
+				for (ResultSinkInfo sinkInfo : sinks) {
+					Element flow = new Element("flow");
+					flow.appendChild(handleSink(sinkInfo, cfg, results));
+
+					Set<ResultSourceInfo> srcSet = resultInfos.get(sinkInfo);
+					List<ResultSourceInfo> srcs = new ArrayList<ResultSourceInfo>(srcSet);
+					Collections.sort(srcs, sourceSorter);
+					for (ResultSourceInfo srcInfo : srcs) {
+						flow.appendChild(handleSource(srcInfo, cfg, results));
+					}
+					root.appendChild(flow);
+				}
+			}
+
+			return root;
 		}
 
 		@Override
 		public void onResultsAvailable(IInfoflowCFG cfg, InfoflowResults results) {
 			try {
-				handleResults(cfg, results);
+				Element root = handleResults(cfg, results);
+				Document doc = new Document(root);
+				OutputStream os = null;
+
+				try {
+					if (this.output != null) {
+						os = new FileOutputStream(this.output);
+					} else {
+						os = System.out;
+					}
+					Serializer serializer = new Serializer(os, "UTF-8");
+					serializer.setIndent(4);
+					serializer.setMaxLength(64);
+					serializer.write(doc);
+				} catch (IOException ex) {
+					ex.printStackTrace();
+				} finally {
+					if (this.output != null && os != null) {
+						try {
+							os.close();
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
+					}
+				}
+
+				/*
+				 * Options.v().set_output_format(Options.output_format_dex);
+				 * PackManager.v().getPack("wjtp").add(new
+				 * Transform("wjtp.myInstrumenter", new SinkLabeler()));
+				 * PackManager.v().getPack("wjtp").apply();
+				 * PackManager.v().writeOutput();
+				 */
 			} finally {
-				if (this.wr != null) {
-					try {
-						this.wr.close();
-					} catch (Exception e) {
-					}
-				}
+
 			}
 		}
 
-		public static String escapeXML(Object obj) {
-			return escapeXML(obj.toString(), "");
-		}
-
-		public static String escapeXML(String str, String retIfNull) {
-			/*
-			 * Based on
-			 * http://www.docjar.com/html/api/org/apache/commons/lang/Entities
-			 * .java.html
-			 */
-			if (str == null) {
-				return retIfNull;
-			}
-			StringWriter writer = new StringWriter();
-			int len = str.length();
-			for (int i = 0; i < len; i++) {
-				char c = str.charAt(i);
-				if (c > 0x7F) {
-					writer.write("&#");
-					writer.write(Integer.toString(c, 10));
-					writer.write(';');
-				} else {
-					switch ((byte) c) {
-					case '&':
-						writer.write("&amp;");
-						break;
-					case '<':
-						writer.write("&lt;");
-						break;
-					case '>':
-						writer.write("&gt;");
-						break;
-					case '"':
-						writer.write("&quot;");
-						break;
-					case '\'':
-						writer.write("&apos;");
-						break;
-					default:
-						writer.write(c);
-					}
-				}
-			}
-			return writer.toString();
-		}
-
-		private void printf(String format, Object... args) {
-			try {
-				System.out.printf(format, args);
-				if (wr != null)
-					wr.write(String.format(format, args));
-			} catch (IOException ex) {
-				// ignore
-			}
-		}
-
-		private void println(String string) {
-			try {
-				System.out.println(string);
-				if (wr != null)
-					wr.write(string + "\n");
-			} catch (IOException ex) {
-				// ignore
-			}
-		}
-
-		private void print(String string) {
-			try {
-				System.out.print(string);
-				if (wr != null)
-					wr.write(string);
-			} catch (IOException ex) {
-				// ignore
-			}
-		}
 	}
 
 	public static void usage() {
@@ -395,9 +355,11 @@ public class DidfailPhase1 {
 		MySetupApplication app = new MySetupApplication(jct.platforms, jct.apk);
 		app.setConfig(config);
 
-		EasyTaintWrapper easyTaintWrapper;
-		easyTaintWrapper = new EasyTaintWrapper(jct.taintWrapper);
-		easyTaintWrapper.setAggressiveMode(true);
+		EasyTaintWrapper easyTaintWrapper = null;
+		if (jct.taintWrapper != null) {
+			easyTaintWrapper = new EasyTaintWrapper(jct.taintWrapper);
+			easyTaintWrapper.setAggressiveMode(true);
+		}
 		app.setTaintWrapper(easyTaintWrapper);
 		app.calculateSourcesSinksEntrypoints(jct.sourcesAndSinks);
 
@@ -405,14 +367,13 @@ public class DidfailPhase1 {
 		preprocessors.add(new DidfailPreprocessor());
 
 		BufferedWriter bw = null;
-		if (jct.outfile != null && !jct.outfile.isEmpty()) {
-			File out = new File(jct.outfile);
-			bw = new BufferedWriter(new FileWriter(out));
+		File out = null;
+		if (jct.outfile != null) {
+			out = new File(jct.outfile);
 		}
-
-		DidfailResultHandler handler = new DidfailResultHandler(bw);
-		// String pkg = app.getSourceSinkManager().getAppPackageName();
-		// handler.setAppPackage(pkg);
+		DidfailResultHandler handler = new DidfailResultHandler(out);
+		String pkg = app.getAppPackage();
+		handler.setAppPackage(pkg);
 		app.runInfoflow(handler, preprocessors);
 	}
 }

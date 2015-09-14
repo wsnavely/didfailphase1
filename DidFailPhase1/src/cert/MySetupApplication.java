@@ -36,7 +36,6 @@ import soot.SootMethod;
 import soot.jimple.infoflow.Infoflow;
 import soot.jimple.infoflow.android.AnalyzeJimpleClass;
 import soot.jimple.infoflow.android.InfoflowAndroidConfiguration;
-import soot.jimple.infoflow.android.SetupApplication;
 import soot.jimple.infoflow.android.data.AndroidMethod;
 import soot.jimple.infoflow.android.data.parsers.PermissionMethodParser;
 import soot.jimple.infoflow.android.manifest.ProcessManifest;
@@ -695,7 +694,7 @@ public class MySetupApplication {
 		if (preprocessors != null) {
 			info.setPreProcessors(preprocessors);
 		}
-		
+
 		final String path;
 		if (forceAndroidJar)
 			path = androidJar;
@@ -757,6 +756,10 @@ public class MySetupApplication {
 	 */
 	public IInfoflowConfig getSootConfig() {
 		return this.sootConfig;
+	}
+
+	public String getAppPackage() {
+		return this.appPackageName;
 	}
 
 	/**
