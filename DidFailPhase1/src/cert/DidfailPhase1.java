@@ -81,13 +81,12 @@ public class DidfailPhase1 {
 				protected void internalTransform(String phaseName, Map<String, String> options) {
 					for (SootClass sc : Scene.v().getClasses()) {
 						for (SootMethod m : sc.getMethods()) {
-							if (m.getName().startsWith("test"))
-								try {
-									Body b = m.retrieveActiveBody();
-									new AssignmentAnalysis(new ExceptionalUnitGraph(b));
-								} catch (Exception e) {
-									continue;
-								}
+							try {
+								Body b = m.retrieveActiveBody();
+								new AssignmentAnalysis(new ExceptionalUnitGraph(b));
+							} catch (Exception e) {
+								continue;
+							}
 						}
 					}
 				}
