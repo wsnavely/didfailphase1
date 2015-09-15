@@ -1,4 +1,4 @@
-package cert;
+package cert.action;
 
 import java.io.BufferedWriter;
 import java.io.FileOutputStream;
@@ -18,7 +18,9 @@ import com.amazonaws.services.ec2.model.Reservation;
 import com.amazonaws.services.ec2.model.RunInstancesRequest;
 import com.amazonaws.services.ec2.model.RunInstancesResult;
 
-public class StartInstancesAction extends Action {
+import cert.config.ExperimentConfig;
+
+public class CreateInstancesAction extends Action {
 	private String instanceType;
 	private String imageId;
 	private int instanceCount;
@@ -27,11 +29,7 @@ public class StartInstancesAction extends Action {
 	private List<String> instanceIds = new ArrayList<String>();
 	private List<Instance> instances = new ArrayList<Instance>();
 
-	public StartInstancesAction() throws Exception {
-		super();
-	}
-
-	public StartInstancesAction(AmazonEC2 ec2Conn) {
+	public CreateInstancesAction(AmazonEC2 ec2Conn) {
 		super(ec2Conn);
 	}
 
@@ -115,14 +113,14 @@ public class StartInstancesAction extends Action {
 	}
 
 	public static void main(String[] args) throws Exception {
-		StartInstancesAction step = new StartInstancesAction();
+		AmazonEC2 conn = ExperimentHelper.getConnection();
+		CreateInstancesAction step = new CreateInstancesAction(conn);
 		step.setImageId(ExperimentConfig.instanceId);
 		step.setInstanceType(ExperimentConfig.instanceType);
 		step.setInstanceCount(ExperimentConfig.instanceCount);
 		step.setKeyName(ExperimentConfig.accessKey);
 		step.setSecurityGroupName(ExperimentConfig.securityGroupName);
 		step.run();
-		List<String> ids = step.getInstanceIds();
 		String outFile = "ids";
 		BufferedWriter writer = null;
 		try {

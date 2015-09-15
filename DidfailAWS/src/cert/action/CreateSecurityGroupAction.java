@@ -1,4 +1,4 @@
-package cert;
+package cert.action;
 
 import java.util.ArrayList;
 
@@ -8,13 +8,11 @@ import com.amazonaws.services.ec2.model.AuthorizeSecurityGroupIngressRequest;
 import com.amazonaws.services.ec2.model.CreateSecurityGroupRequest;
 import com.amazonaws.services.ec2.model.IpPermission;
 
+import cert.config.ExperimentConfig;
+
 public class CreateSecurityGroupAction extends Action {
 	private String name;
 	private String description;
-
-	public CreateSecurityGroupAction() throws Exception {
-		super();
-	}
 
 	public CreateSecurityGroupAction(AmazonEC2 ec2Conn) {
 		super(ec2Conn);
@@ -59,7 +57,8 @@ public class CreateSecurityGroupAction extends Action {
 	}
 
 	public static void main(String[] args) throws Exception {
-		CreateSecurityGroupAction step = new CreateSecurityGroupAction();
+		AmazonEC2 conn = ExperimentHelper.getConnection();
+		CreateSecurityGroupAction step = new CreateSecurityGroupAction(conn);
 		step.setDescription(ExperimentConfig.securityGroupDesc);
 		step.setName(ExperimentConfig.securityGroupName);
 		step.run();
