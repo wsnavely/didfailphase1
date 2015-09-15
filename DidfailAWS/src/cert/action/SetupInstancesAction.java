@@ -65,14 +65,28 @@ public class SetupInstancesAction extends Action {
 		session.setKeyFile(ExperimentConfig.privateKeyFile);
 		session.connect();
 
-		// Ensure we can send commands
-		String login;
-		do {
-			login = session.sendCommand("whoami");
-			System.out.println(login);
-		} while (login == null);
+		try {
+			// Ensure we can send commands
+			String output;
+			do {
+				// TODO make this more robust to failure, retry count perhaps
+				output = session.sendCommand("whoami");
+			} while (output == null);
 
-		session.close();
+			System.out.printf("[%s]: Making directory to store APKs\n", info.ip);
+			output = session.sendCommand("mkdir -p ~/apks");
+
+			for (String path : apks) {
+				System.out.printf("[%s]: Downloading %s\n", info.ip, path);
+				String cmd = makeS3DownloadCmd(path, "~/apks/");
+				output = session.sendCommand(cmd);
+			}
+
+			System.out.printf("[%s]: Cloning git repo\n", info.ip);
+			output = session.sendCommand("git clone https://github.com/wsnavely/flowdroid-runner.git");
+		} finally {
+			session.close();
+		}
 	}
 
 	private String makeS3DownloadCmd(String path, String dest) {
