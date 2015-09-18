@@ -2,12 +2,19 @@ package cert.config;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import com.json.parsers.JSONParser;
 
 public class ExperimentConfig {
 	private static final String CONFIG_NAME = "experiment.json";
+
+	private static final String IDS_NAME = "ids";
 
 	public String workingDir;
 	public String experimentId;
@@ -28,6 +35,7 @@ public class ExperimentConfig {
 	private ExperimentConfig() {
 	}
 
+	@SuppressWarnings("rawtypes")
 	public static ExperimentConfig loadConfig(String directory) throws Exception {
 		String configPath = new File(directory, CONFIG_NAME).toString();
 		ExperimentConfig config = new ExperimentConfig();
@@ -50,5 +58,16 @@ public class ExperimentConfig {
 		config.proxyPort = Integer.parseInt(jsonObject.get("proxyPort").toString());
 		config.jvmArgs = (String) jsonObject.get("jvmArgs");
 		return config;
+	}
+
+	public List<String> readInstanceIds() {
+		List<String> lines = new ArrayList<String>();
+		String idsPath = new File(this.workingDir, IDS_NAME).toString();
+		try {
+			lines = Files.readAllLines(Paths.get(idsPath));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return lines;
 	}
 }

@@ -12,7 +12,6 @@ import com.amazonaws.services.ec2.AmazonEC2;
 import com.beust.jcommander.JCommander;
 
 import cert.SSHSession;
-import cert.SSHSession.Output;
 import cert.config.ExperimentConfig;
 
 public class SeedInstancesStep extends SSHSessionStep {
@@ -52,17 +51,16 @@ public class SeedInstancesStep extends SSHSessionStep {
 
 	@Override
 	public void runCommands(MyInstanceInfo info, SSHSession session) {
-		Output output;
 		List<String> apks = this.work.get(info.id);
 		System.out.printf("[%s]: Making directory to store APKs\n", info.ip);
-		output = session.sendCommand("mkdir -p ~/apks");
+		session.sendCommand("mkdir -p ~/apks");
 		for (String path : apks) {
 			System.out.printf("[%s]: Downloading %s\n", info.ip, path);
 			String cmd = makeS3DownloadCmd(path, "~/apks/");
-			output = session.sendCommand(cmd);
+			session.sendCommand(cmd);
 		}
 		System.out.printf("[%s]: Cloning git repo\n", info.ip);
-		output = session.sendCommand("git clone https://github.com/wsnavely/flowdroid-runner.git");
+		session.sendCommand("git clone https://github.com/wsnavely/flowdroid-runner.git");
 	}
 
 	private String makeS3DownloadCmd(String path, String dest) {

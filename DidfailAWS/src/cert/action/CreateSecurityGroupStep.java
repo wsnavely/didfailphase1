@@ -10,7 +10,6 @@ import com.amazonaws.services.ec2.model.IpPermission;
 import com.beust.jcommander.JCommander;
 
 import cert.config.ExperimentConfig;
-import cert.config.ExperimentConfig;
 
 public class CreateSecurityGroupStep extends ExperimentStep {
 	private String name;

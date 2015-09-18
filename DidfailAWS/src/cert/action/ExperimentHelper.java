@@ -1,9 +1,5 @@
 package cert.action;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,19 +28,8 @@ public class ExperimentHelper {
 		return new AmazonEC2Client(credentials, clientConfig);
 	}
 
-	public static List<String> readInstanceIds(ExperimentConfig expConfig) {
-		List<String> lines = new ArrayList<String>();
-		String idsPath = new File(expConfig.workingDir, "ids").toString();
-		try {
-			lines = Files.readAllLines(Paths.get(idsPath));
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		return lines;
-	}
-
 	public static List<MyInstanceInfo> getInstanceInfo(AmazonEC2 conn, ExperimentConfig expConfig) {
-		List<String> ids = readInstanceIds(expConfig);
+		List<String> ids = expConfig.readInstanceIds();
 		List<MyInstanceInfo> myInfos = new ArrayList<MyInstanceInfo>();
 		DescribeInstancesRequest descInst;
 		descInst = new DescribeInstancesRequest().withInstanceIds(ids);
