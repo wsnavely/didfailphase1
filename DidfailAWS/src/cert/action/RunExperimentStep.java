@@ -15,14 +15,17 @@ public class RunExperimentStep extends SSHSessionStep {
 
 	@Override
 	public void runCommands(MyInstanceInfo info, SSHSession session) {
-		System.out.println(info.id);
-		String cmd = makeAnalysisCommand();
+		String cmd = makeAnalysisCommand(info);
 		System.out.println(cmd);
-		System.out.println(session.sendCommand(cmd));
+		session.sendCommand(cmd);
 	}
 
-	private String makeAnalysisCommand() {
-		return "(cd /home/ubuntu/flowdroid-runner; nohup python /home/ubuntu/flowdroid-runner/run.py -Xmx20000m  > /dev/null 2>&1 &)";
+	private String makeAnalysisCommand(MyInstanceInfo info) {
+		String dest = String.format("s3://flowdroidresults/%s/%s/", this.config.experimentId, info.id);
+		String cd_cmd = "cd /home/ubuntu/flowdroid-runner";
+		String run_cmd = "nohup python %s --jvmargs=\"%s\" --s3out=\"%s\" > /dev/null 2>&1";
+		run_cmd = String.format(run_cmd, "/home/ubuntu/flowdroid-runner/run.py", this.config.jvmArgs, dest);
+		return String.format("(%s; %s &)", cd_cmd, run_cmd);
 	}
 
 	public static void main(String[] args) throws Exception {
