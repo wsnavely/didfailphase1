@@ -9,8 +9,8 @@ public abstract class Action {
 		this.ec2Conn = ec2Conn;
 	}
 
-	public abstract void run();
-
+	public abstract void runAction();
+	
 	protected void sleep(int time) {
 		try {
 			Thread.sleep(time);

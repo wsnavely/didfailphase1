@@ -1,9 +1,10 @@
 package cert.config;
 
 public class ExperimentConfig {
-	public static int instanceCount = 2;
+	public static String experimentId = "bilbo";
+	public static int instanceCount = 5;
 	public static String instanceId = "ami-21295e44";
-	public static String instanceType = "m3.medium";
+	public static String instanceType = "r3.xlarge";
 	public static String login = "ubuntu";
 	public static String securityGroupName = "MySecurityGroup";
 	public static String securityGroupDesc = "Experiment security group.";

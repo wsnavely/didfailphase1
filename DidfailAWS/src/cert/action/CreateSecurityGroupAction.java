@@ -27,7 +27,7 @@ public class CreateSecurityGroupAction extends Action {
 	}
 
 	@Override
-	public void run() {
+	public void runAction() {
 		try {
 			CreateSecurityGroupRequest secGroupRequest = new CreateSecurityGroupRequest(this.name, this.description);
 			ec2Conn.createSecurityGroup(secGroupRequest);
@@ -61,6 +61,6 @@ public class CreateSecurityGroupAction extends Action {
 		CreateSecurityGroupAction step = new CreateSecurityGroupAction(conn);
 		step.setDescription(ExperimentConfig.securityGroupDesc);
 		step.setName(ExperimentConfig.securityGroupName);
-		step.run();
+		step.runAction();
 	}
 }

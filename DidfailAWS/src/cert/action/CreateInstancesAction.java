@@ -62,7 +62,7 @@ public class CreateInstancesAction extends Action {
 	}
 
 	@Override
-	public void run() {
+	public void runAction() {
 		launchInstances();
 	}
 
@@ -120,15 +120,14 @@ public class CreateInstancesAction extends Action {
 		step.setInstanceCount(ExperimentConfig.instanceCount);
 		step.setKeyName(ExperimentConfig.accessKey);
 		step.setSecurityGroupName(ExperimentConfig.securityGroupName);
-		step.run();
+		step.runAction();
 		String outFile = "ids";
 		BufferedWriter writer = null;
 		try {
 			writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outFile), "utf-8"));
-			String line;
+
 			for (Instance i : step.getInstances()) {
-				line = String.format("%s,%s,%s", i.getInstanceId(), i.getPublicIpAddress(), i.getPublicDnsName());
-				writer.write(line);
+				writer.write(i.getInstanceId());
 				writer.newLine();
 			}
 		} catch (IOException ex) {

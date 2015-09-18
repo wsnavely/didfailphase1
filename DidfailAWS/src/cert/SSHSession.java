@@ -95,4 +95,12 @@ public class SSHSession {
 	public void close() {
 		this.session.disconnect();
 	}
+
+	public void testLiveness() {
+		String output;
+		do {
+			// TODO make this more robust to failure, retry count perhaps
+			output = this.sendCommand("whoami");
+		} while (output == null);
+	}
 }
