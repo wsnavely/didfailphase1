@@ -1,6 +1,7 @@
 package cert.action;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -17,10 +18,11 @@ import com.amazonaws.services.ec2.model.InstanceStatus;
 import com.amazonaws.services.ec2.model.Reservation;
 import com.amazonaws.services.ec2.model.RunInstancesRequest;
 import com.amazonaws.services.ec2.model.RunInstancesResult;
+import com.beust.jcommander.JCommander;
 
 import cert.config.ExperimentConfig;
 
-public class CreateInstancesAction extends Action {
+public class CreateInstancesStep extends ExperimentStep {
 	private String instanceType;
 	private String imageId;
 	private int instanceCount;
@@ -29,8 +31,8 @@ public class CreateInstancesAction extends Action {
 	private List<String> instanceIds = new ArrayList<String>();
 	private List<Instance> instances = new ArrayList<Instance>();
 
-	public CreateInstancesAction(AmazonEC2 ec2Conn) {
-		super(ec2Conn);
+	public CreateInstancesStep(AmazonEC2 ec2Conn, ExperimentConfig config) {
+		super(ec2Conn, config);
 	}
 
 	public void setInstanceType(String s) {
@@ -113,30 +115,34 @@ public class CreateInstancesAction extends Action {
 	}
 
 	public static void main(String[] args) throws Exception {
-		AmazonEC2 conn = ExperimentHelper.getConnection();
-		CreateInstancesAction step = new CreateInstancesAction(conn);
-		step.setImageId(ExperimentConfig.instanceId);
-		step.setInstanceType(ExperimentConfig.instanceType);
-		step.setInstanceCount(ExperimentConfig.instanceCount);
-		step.setKeyName(ExperimentConfig.accessKey);
-		step.setSecurityGroupName(ExperimentConfig.securityGroupName);
+		ExperimentArgs jct = new ExperimentArgs();
+		new JCommander(jct, args);
+		ExperimentConfig config = ExperimentConfig.loadConfig(jct.workingDir);
+		AmazonEC2 conn = ExperimentHelper.getConnection(config);
+
+		CreateInstancesStep step = new CreateInstancesStep(conn, config);
+		step.setImageId(config.instanceId);
+		step.setInstanceType(config.instanceType);
+		step.setInstanceCount(config.instanceCount);
+		step.setKeyName(config.accessKey);
+		step.setSecurityGroupName(config.securityGroupName);
 		step.runAction();
-		String outFile = "ids";
+
+		String outFile = new File(config.workingDir, "ids").toString();
 		BufferedWriter writer = null;
 		try {
 			writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outFile), "utf-8"));
-
 			for (Instance i : step.getInstances()) {
 				writer.write(i.getInstanceId());
 				writer.newLine();
 			}
 		} catch (IOException ex) {
-			// report
+			ex.printStackTrace();
 		} finally {
 			try {
 				writer.close();
 			} catch (Exception ex) {
-				/* ignore */}
+			}
 		}
 	}
 }

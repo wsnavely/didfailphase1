@@ -1,17 +1,52 @@
 package cert.config;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.util.Map;
+
+import com.json.parsers.JSONParser;
+
 public class ExperimentConfig {
-	public static String experimentId = "bilbo";
-	public static int instanceCount = 5;
-	public static String instanceId = "ami-21295e44";
-	public static String instanceType = "r3.xlarge";
-	public static String login = "ubuntu";
-	public static String securityGroupName = "MySecurityGroup";
-	public static String securityGroupDesc = "Experiment security group.";
-	public static String accessKey = "desktop_home";
-	public static String privateKeyFile = "/home/osboxes/desktop_home.pem";
-	public static String apkPathFile = "/home/osboxes/git/didfailphase1/DidfailAWS/input_paths";
-	public static boolean useProxy = true;
-	public static String proxyHost = "proxy.sei.cmu.edu";
-	public static int proxyPort = 8080;
+	private static final String CONFIG_NAME = "experiment.json";
+
+	public String workingDir;
+	public String experimentId;
+	public Integer instanceCount;
+	public String instanceId;
+	public String instanceType;
+	public String login;
+	public String securityGroupName;
+	public String securityGroupDesc;
+	public String accessKey;
+	public String privateKeyFile;
+	public String apkPathFile;
+	public Boolean useProxy;
+	public String proxyHost;
+	public Integer proxyPort;
+
+	private ExperimentConfig() {
+	}
+
+	public static ExperimentConfig loadConfig(String directory) throws Exception {
+		String configPath = new File(directory, CONFIG_NAME).toString();
+		ExperimentConfig config = new ExperimentConfig();
+		config.workingDir = directory;
+		JSONParser parser = new JSONParser();
+		Object obj = parser.parseJson(new FileInputStream(configPath), "utf-8");
+		Map jsonObject = (Map) obj;
+		config.experimentId = (String) jsonObject.get("experimentId");
+		config.instanceCount = Integer.parseInt(jsonObject.get("instanceCount").toString());
+		config.instanceId = (String) jsonObject.get("instanceId");
+		config.instanceType = (String) jsonObject.get("instanceType");
+		config.login = (String) jsonObject.get("login");
+		config.securityGroupName = (String) jsonObject.get("securityGroupName");
+		config.securityGroupDesc = (String) jsonObject.get("securityGroupDesc");
+		config.accessKey = (String) jsonObject.get("accessKey");
+		config.privateKeyFile = (String) jsonObject.get("privateKeyFile");
+		config.apkPathFile = (String) jsonObject.get("apkPathFile");
+		config.useProxy = Boolean.parseBoolean(jsonObject.get("useProxy").toString());
+		config.proxyHost = (String) jsonObject.get("proxyHost");
+		config.proxyPort = Integer.parseInt(jsonObject.get("proxyPort").toString());
+		return config;
+	}
 }

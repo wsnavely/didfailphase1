@@ -1,15 +1,34 @@
 package cert;
 
-import java.io.IOException;
 import java.io.InputStream;
 
-import com.jcraft.jsch.Channel;
 import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.JSch;
-import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 
 public class SSHSession {
+	public class Output {
+		String stdout;
+		String stderr;
+
+		public Output(String out, String err) {
+			this.stdout = out;
+			this.stderr = err;
+		}
+
+		@Override
+		public String toString() {
+			StringBuffer result = new StringBuffer();
+			result.append("[STDOUT]\n");
+			result.append(this.stdout);
+			result.append("\n");
+			result.append("[STDERR]\n");
+			result.append(this.stderr);
+			result.append("\n");
+			return result.toString();
+		}
+	}
+
 	public enum AuthMethod {
 		Password, Key
 	}
@@ -68,28 +87,34 @@ public class SSHSession {
 		this.session.connect();
 	}
 
-	public String sendCommand(String command) {
+	public Output sendCommand(String command) {
 		StringBuilder outputBuffer = new StringBuilder();
-
+		StringBuilder errBuffer = new StringBuilder();
 		try {
-			Channel channel = this.session.openChannel("exec");
-			((ChannelExec) channel).setCommand(command);
+			ChannelExec channel = (ChannelExec) this.session.openChannel("exec");
+			channel.setCommand(command);
 			InputStream commandOutput = channel.getInputStream();
+			InputStream commandError = channel.getErrStream();
 			channel.connect();
+
 			int readByte = commandOutput.read();
 			while (readByte != 0xffffffff) {
 				outputBuffer.append((char) readByte);
 				readByte = commandOutput.read();
 			}
 
+			readByte = commandError.read();
+			while (readByte != 0xffffffff) {
+				errBuffer.append((char) readByte);
+				readByte = commandError.read();
+			}
 			channel.disconnect();
-		} catch (IOException ioX) {
-			return null;
-		} catch (JSchException jschX) {
+		} catch (Exception e) {
+			e.printStackTrace();
 			return null;
 		}
 
-		return outputBuffer.toString();
+		return new Output(outputBuffer.toString(), errBuffer.toString());
 	}
 
 	public void close() {
@@ -100,7 +125,7 @@ public class SSHSession {
 		String output;
 		do {
 			// TODO make this more robust to failure, retry count perhaps
-			output = this.sendCommand("whoami");
-		} while (output == null);
+			output = this.sendCommand("echo ping").stdout;
+		} while (output == null || !output.trim().equals("ping"));
 	}
 }

@@ -1,5 +1,6 @@
 package cert.action;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -19,32 +20,31 @@ import com.amazonaws.services.ec2.model.Reservation;
 import cert.config.ExperimentConfig;
 
 public class ExperimentHelper {
-	private static final String ID_PATH = "ids";
 
-	public static AmazonEC2 getConnection() {
+	public static AmazonEC2 getConnection(ExperimentConfig expConfig) {
 		AWSCredentials credentials = null;
 		credentials = new ProfileCredentialsProvider("default").getCredentials();
-		ClientConfiguration config = new ClientConfiguration();
-		if (ExperimentConfig.useProxy) {
-			config.setProxyHost(ExperimentConfig.proxyHost);
-			config.setProxyPort(ExperimentConfig.proxyPort);
+		ClientConfiguration clientConfig = new ClientConfiguration();
+		if (expConfig.useProxy) {
+			clientConfig.setProxyHost(expConfig.proxyHost);
+			clientConfig.setProxyPort(expConfig.proxyPort);
 		}
-		return new AmazonEC2Client(credentials, config);
+		return new AmazonEC2Client(credentials, clientConfig);
 	}
 
-	public static List<String> readInstanceIds() {
+	public static List<String> readInstanceIds(ExperimentConfig expConfig) {
 		List<String> lines = new ArrayList<String>();
+		String idsPath = new File(expConfig.workingDir, "ids").toString();
 		try {
-			lines = Files.readAllLines(Paths.get(ID_PATH));
+			lines = Files.readAllLines(Paths.get(idsPath));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		return lines;
-
 	}
 
-	public static List<MyInstanceInfo> getInstanceInfo(AmazonEC2 conn) {
-		List<String> ids = readInstanceIds();
+	public static List<MyInstanceInfo> getInstanceInfo(AmazonEC2 conn, ExperimentConfig expConfig) {
+		List<String> ids = readInstanceIds(expConfig);
 		List<MyInstanceInfo> myInfos = new ArrayList<MyInstanceInfo>();
 		DescribeInstancesRequest descInst;
 		descInst = new DescribeInstancesRequest().withInstanceIds(ids);

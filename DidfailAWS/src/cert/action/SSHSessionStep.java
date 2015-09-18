@@ -8,11 +8,11 @@ import cert.SSHSession;
 import cert.SSHSession.AuthMethod;
 import cert.config.ExperimentConfig;
 
-public abstract class SSHSessionAction extends Action {
+public abstract class SSHSessionStep extends ExperimentStep {
 	protected List<MyInstanceInfo> instanceInfos;
 
-	public SSHSessionAction(AmazonEC2 ec2Conn) {
-		super(ec2Conn);
+	public SSHSessionStep(AmazonEC2 ec2Conn, ExperimentConfig config) {
+		super(ec2Conn, config);
 	}
 
 	public void setInstanceInfos(List<MyInstanceInfo> instanceInfos) {
@@ -27,10 +27,10 @@ public abstract class SSHSessionAction extends Action {
 			SSHSession session = null;
 			try {
 				session = new SSHSession();
-				session.setUser(ExperimentConfig.login);
+				session.setUser(this.config.login);
 				session.setAuthMethod(AuthMethod.Key);
 				session.setHost(info.ip);
-				session.setKeyFile(ExperimentConfig.privateKeyFile);
+				session.setKeyFile(this.config.privateKeyFile);
 				session.connect();
 				session.testLiveness();
 				runCommands(info, session);

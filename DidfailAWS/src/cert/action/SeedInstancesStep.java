@@ -9,16 +9,18 @@ import java.util.List;
 import java.util.Map;
 
 import com.amazonaws.services.ec2.AmazonEC2;
+import com.beust.jcommander.JCommander;
 
 import cert.SSHSession;
+import cert.SSHSession.Output;
 import cert.config.ExperimentConfig;
 
-public class SeedInstancesAction extends SSHSessionAction {
+public class SeedInstancesStep extends SSHSessionStep {
 	private String apkPathListFile;
 	private Map<String, List<String>> work;
 
-	public SeedInstancesAction(AmazonEC2 ec2Conn) {
-		super(ec2Conn);
+	public SeedInstancesStep(AmazonEC2 ec2Conn, ExperimentConfig config) {
+		super(ec2Conn, config);
 	}
 
 	public void setApkPathListFile(String apkPathListFile) {
@@ -50,7 +52,7 @@ public class SeedInstancesAction extends SSHSessionAction {
 
 	@Override
 	public void runCommands(MyInstanceInfo info, SSHSession session) {
-		String output;
+		Output output;
 		List<String> apks = this.work.get(info.id);
 		System.out.printf("[%s]: Making directory to store APKs\n", info.ip);
 		output = session.sendCommand("mkdir -p ~/apks");
@@ -68,10 +70,13 @@ public class SeedInstancesAction extends SSHSessionAction {
 	}
 
 	public static void main(String[] args) throws Exception {
-		AmazonEC2 conn = ExperimentHelper.getConnection();
-		List<MyInstanceInfo> infos = ExperimentHelper.getInstanceInfo(conn);
-		SeedInstancesAction step = new SeedInstancesAction(conn);
-		step.setApkPathListFile(ExperimentConfig.apkPathFile);
+		ExperimentArgs jct = new ExperimentArgs();
+		new JCommander(jct, args);
+		ExperimentConfig config = ExperimentConfig.loadConfig(jct.workingDir);
+		AmazonEC2 conn = ExperimentHelper.getConnection(config);
+		List<MyInstanceInfo> infos = ExperimentHelper.getInstanceInfo(conn, config);
+		SeedInstancesStep step = new SeedInstancesStep(conn, config);
+		step.setApkPathListFile(config.apkPathFile);
 		step.setInstanceInfos(infos);
 		step.runAction();
 	}

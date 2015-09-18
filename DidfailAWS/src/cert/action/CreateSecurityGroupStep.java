@@ -7,15 +7,17 @@ import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.model.AuthorizeSecurityGroupIngressRequest;
 import com.amazonaws.services.ec2.model.CreateSecurityGroupRequest;
 import com.amazonaws.services.ec2.model.IpPermission;
+import com.beust.jcommander.JCommander;
 
 import cert.config.ExperimentConfig;
+import cert.config.ExperimentConfig;
 
-public class CreateSecurityGroupAction extends Action {
+public class CreateSecurityGroupStep extends ExperimentStep {
 	private String name;
 	private String description;
 
-	public CreateSecurityGroupAction(AmazonEC2 ec2Conn) {
-		super(ec2Conn);
+	public CreateSecurityGroupStep(AmazonEC2 ec2Conn, ExperimentConfig config) {
+		super(ec2Conn, config);
 	}
 
 	public void setName(String name) {
@@ -57,10 +59,13 @@ public class CreateSecurityGroupAction extends Action {
 	}
 
 	public static void main(String[] args) throws Exception {
-		AmazonEC2 conn = ExperimentHelper.getConnection();
-		CreateSecurityGroupAction step = new CreateSecurityGroupAction(conn);
-		step.setDescription(ExperimentConfig.securityGroupDesc);
-		step.setName(ExperimentConfig.securityGroupName);
+		ExperimentArgs jct = new ExperimentArgs();
+		new JCommander(jct, args);
+		ExperimentConfig config = ExperimentConfig.loadConfig(jct.workingDir);
+		AmazonEC2 conn = ExperimentHelper.getConnection(config);
+		CreateSecurityGroupStep step = new CreateSecurityGroupStep(conn, config);
+		step.setDescription(config.securityGroupDesc);
+		step.setName(config.securityGroupName);
 		step.runAction();
 	}
 }
