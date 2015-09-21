@@ -19,7 +19,7 @@ public class SeedInstancesStep extends SSHSessionStep {
 	private Map<String, List<String>> work;
 
 	public SeedInstancesStep(AmazonEC2 ec2Conn, ExperimentConfig config) {
-		super(ec2Conn, config);
+		super(ec2Conn);
 	}
 
 	public void setApkPathListFile(String apkPathListFile) {
@@ -74,6 +74,8 @@ public class SeedInstancesStep extends SSHSessionStep {
 		AmazonEC2 conn = ExperimentHelper.getConnection(config);
 		List<MyInstanceInfo> infos = ExperimentHelper.getInstanceInfo(conn, config);
 		SeedInstancesStep step = new SeedInstancesStep(conn, config);
+		step.setLogin(config.login);
+		step.setKeyFile(config.privateKeyFile);
 		step.setApkPathListFile(config.apkPathFile);
 		step.setInstanceInfos(infos);
 		step.runAction();

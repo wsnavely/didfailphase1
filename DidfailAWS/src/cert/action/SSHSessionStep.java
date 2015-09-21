@@ -6,13 +6,24 @@ import com.amazonaws.services.ec2.AmazonEC2;
 
 import cert.SSHSession;
 import cert.SSHSession.AuthMethod;
-import cert.config.ExperimentConfig;
 
 public abstract class SSHSessionStep extends ExperimentStep {
 	protected List<MyInstanceInfo> instanceInfos;
 
-	public SSHSessionStep(AmazonEC2 ec2Conn, ExperimentConfig config) {
-		super(ec2Conn, config);
+	private String login;
+
+	private String keyFile;
+
+	public SSHSessionStep(AmazonEC2 ec2Conn) {
+		super(ec2Conn);
+	}
+
+	public void setKeyFile(String keyFile) {
+		this.keyFile = keyFile;
+	}
+
+	public void setLogin(String login) {
+		this.login = login;
 	}
 
 	public void setInstanceInfos(List<MyInstanceInfo> instanceInfos) {
@@ -27,10 +38,10 @@ public abstract class SSHSessionStep extends ExperimentStep {
 			SSHSession session = null;
 			try {
 				session = new SSHSession();
-				session.setUser(this.config.login);
+				session.setUser(this.login);
 				session.setAuthMethod(AuthMethod.Key);
 				session.setHost(info.ip);
-				session.setKeyFile(this.config.privateKeyFile);
+				session.setKeyFile(this.keyFile);
 				session.connect();
 				session.testLiveness();
 				runCommands(info, session);

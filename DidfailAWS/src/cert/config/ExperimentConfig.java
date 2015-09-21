@@ -30,7 +30,7 @@ public class ExperimentConfig {
 	public Boolean useProxy;
 	public String proxyHost;
 	public Integer proxyPort;
-	public String jvmArgs;
+	public String javaHeapSize;
 
 	private ExperimentConfig() {
 	}
@@ -56,7 +56,8 @@ public class ExperimentConfig {
 		config.useProxy = Boolean.parseBoolean(jsonObject.get("useProxy").toString());
 		config.proxyHost = (String) jsonObject.get("proxyHost");
 		config.proxyPort = Integer.parseInt(jsonObject.get("proxyPort").toString());
-		config.jvmArgs = (String) jsonObject.get("jvmArgs");
+		config.javaHeapSize = (String) jsonObject.get("jvmHeapSize");
+		// config.jvmArgs = (String) jsonObject.get("jvmArgs");
 		return config;
 	}
 

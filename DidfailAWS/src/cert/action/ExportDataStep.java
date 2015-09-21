@@ -9,15 +9,21 @@ import cert.SSHSession;
 import cert.config.ExperimentConfig;
 
 public class ExportDataStep extends SSHSessionStep {
-	public ExportDataStep(AmazonEC2 ec2Conn, ExperimentConfig config) {
-		super(ec2Conn, config);
+	private String exportId;
+
+	public ExportDataStep(AmazonEC2 ec2Conn) {
+		super(ec2Conn);
+	}
+
+	public void setExportId(String exportId) {
+		this.exportId = exportId;
 	}
 
 	@Override
 	public void runCommands(MyInstanceInfo info, SSHSession session) {
 		String src = "/home/ubuntu/output";
 		String dest = "s3://flowdroidresults/%s/%s/";
-		dest = String.format(dest, this.config.experimentId, info.id);
+		dest = String.format(dest, this.exportId, info.id);
 		String command = makeS3SyncCmd(src, dest);
 		System.out.printf("[%s]: %s\n", info.ip, command);
 		session.sendCommand(command);
@@ -33,7 +39,8 @@ public class ExportDataStep extends SSHSessionStep {
 		ExperimentConfig config = ExperimentConfig.loadConfig(jct.workingDir);
 		AmazonEC2 conn = ExperimentHelper.getConnection(config);
 		List<MyInstanceInfo> infos = ExperimentHelper.getInstanceInfo(conn, config);
-		ExportDataStep step = new ExportDataStep(conn, config);
+		ExportDataStep step = new ExportDataStep(conn);
+		step.setExportId(config.experimentId);
 		step.setInstanceInfos(infos);
 		step.runAction();
 	}

@@ -11,7 +11,7 @@ import cert.config.ExperimentConfig;
 
 public class RunShellCommands extends SSHSessionStep {
 	public RunShellCommands(AmazonEC2 ec2Conn, ExperimentConfig config) {
-		super(ec2Conn, config);
+		super(ec2Conn);
 	}
 
 	private String cmd;
@@ -42,6 +42,8 @@ public class RunShellCommands extends SSHSessionStep {
 		List<MyInstanceInfo> infos = ExperimentHelper.getInstanceInfo(conn, config);
 		RunShellCommands step = new RunShellCommands(conn, config);
 		step.setInstanceInfos(infos);
+		step.setLogin(config.login);
+		step.setKeyFile(config.privateKeyFile);
 		step.runAction();
 	}
 }

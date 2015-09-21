@@ -8,13 +8,17 @@ import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.ec2.AmazonEC2;
+import com.amazonaws.services.ec2.model.AuthorizeSecurityGroupIngressRequest;
+import com.amazonaws.services.ec2.model.CreateSecurityGroupRequest;
 import com.amazonaws.services.ec2.model.DescribeInstanceStatusRequest;
 import com.amazonaws.services.ec2.model.DescribeInstanceStatusResult;
 import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ec2.model.InstanceStatus;
+import com.amazonaws.services.ec2.model.IpPermission;
 import com.amazonaws.services.ec2.model.Reservation;
 import com.amazonaws.services.ec2.model.RunInstancesRequest;
 import com.amazonaws.services.ec2.model.RunInstancesResult;
@@ -27,12 +31,13 @@ public class CreateInstancesStep extends ExperimentStep {
 	private String imageId;
 	private int instanceCount;
 	private String securityGroupName;
+	private String securityGroupDesc;
 	private String keyName;
 	private List<String> instanceIds = new ArrayList<String>();
 	private List<Instance> instances = new ArrayList<Instance>();
 
 	public CreateInstancesStep(AmazonEC2 ec2Conn, ExperimentConfig config) {
-		super(ec2Conn, config);
+		super(ec2Conn);
 	}
 
 	public void setInstanceType(String s) {
@@ -55,6 +60,10 @@ public class CreateInstancesStep extends ExperimentStep {
 		this.securityGroupName = securityGroupName;
 	}
 
+	public void setSecurityGroupDesc(String description) {
+		this.securityGroupDesc = description;
+	}
+
 	public List<String> getInstanceIds() {
 		return instanceIds;
 	}
@@ -65,7 +74,38 @@ public class CreateInstancesStep extends ExperimentStep {
 
 	@Override
 	public void runAction() {
-		launchInstances();
+		this.createSecurityGroup();
+		this.launchInstances();
+	}
+
+	public void createSecurityGroup() {
+		try {
+			CreateSecurityGroupRequest secGroupRequest = new CreateSecurityGroupRequest(this.securityGroupName,
+					this.securityGroupDesc);
+			ec2Conn.createSecurityGroup(secGroupRequest);
+		} catch (AmazonServiceException ase) {
+			System.out.println(ase.getMessage());
+		}
+
+		String ipAddr = "0.0.0.0/0";
+		ArrayList<String> ipRanges = new ArrayList<String>();
+		ipRanges.add(ipAddr);
+
+		ArrayList<IpPermission> ipPermissions = new ArrayList<IpPermission>();
+		IpPermission ipPermission = new IpPermission();
+		ipPermission.setIpProtocol("tcp");
+		ipPermission.setFromPort(new Integer(22));
+		ipPermission.setToPort(new Integer(22));
+		ipPermission.setIpRanges(ipRanges);
+		ipPermissions.add(ipPermission);
+
+		try {
+			AuthorizeSecurityGroupIngressRequest ingressRequest = new AuthorizeSecurityGroupIngressRequest(
+					this.securityGroupName, ipPermissions);
+			ec2Conn.authorizeSecurityGroupIngress(ingressRequest);
+		} catch (AmazonServiceException ase) {
+			System.out.println(ase.getMessage());
+		}
 	}
 
 	private void launchInstances() {
@@ -126,6 +166,7 @@ public class CreateInstancesStep extends ExperimentStep {
 		step.setInstanceCount(config.instanceCount);
 		step.setKeyName(config.accessKey);
 		step.setSecurityGroupName(config.securityGroupName);
+		step.setSecurityGroupDesc(config.securityGroupDesc);
 		step.runAction();
 
 		String outFile = new File(config.workingDir, "ids").toString();
