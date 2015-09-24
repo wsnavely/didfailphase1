@@ -1,4 +1,4 @@
-package cert;
+package cert.didfail.analysis;
 
 import soot.SootMethod;
 import soot.Value;

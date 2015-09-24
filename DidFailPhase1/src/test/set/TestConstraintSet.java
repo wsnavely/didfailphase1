@@ -3,7 +3,7 @@ package test.set;
 import org.junit.Assert;
 import org.junit.Test;
 
-import cert.ActionStringConstraintSet;
+import cert.didfail.analysis.ActionStringConstraintSet;
 
 public class TestConstraintSet {
 

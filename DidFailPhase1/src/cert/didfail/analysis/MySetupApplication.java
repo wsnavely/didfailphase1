@@ -8,7 +8,7 @@
  * Contributors: Christian Fritz, Steven Arzt, Siegfried Rasthofer, Eric
  * Bodden, and others.
  ******************************************************************************/
-package cert;
+package cert.didfail.analysis;
 
 import java.io.File;
 import java.io.IOException;

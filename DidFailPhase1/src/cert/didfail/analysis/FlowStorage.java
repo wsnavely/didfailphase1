@@ -1,4 +1,4 @@
-package cert;
+package cert.didfail.analysis;
 
 import java.util.Collection;
 import java.util.HashMap;

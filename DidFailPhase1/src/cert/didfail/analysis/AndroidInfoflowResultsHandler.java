@@ -1,4 +1,4 @@
-package cert;
+package cert.didfail.analysis;
 import soot.jimple.infoflow.handlers.ResultsAvailableHandler;
 
 public abstract class AndroidInfoflowResultsHandler implements ResultsAvailableHandler {

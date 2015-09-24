@@ -1,4 +1,4 @@
-package cert;
+package cert.didfail.analysis;
 
 public class BooleanExpression {
 	enum Operator {

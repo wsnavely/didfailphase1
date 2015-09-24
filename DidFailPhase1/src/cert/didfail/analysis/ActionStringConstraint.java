@@ -1,4 +1,4 @@
-package cert;
+package cert.didfail.analysis;
 
 public class ActionStringConstraint {
 	private String actionString;

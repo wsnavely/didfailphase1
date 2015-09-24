@@ -1,4 +1,4 @@
-package cert;
+package cert.didfail.analysis;
 
 import java.util.List;
 
@@ -20,8 +20,6 @@ import soot.jimple.ReturnStmt;
 import soot.jimple.ReturnVoidStmt;
 import soot.jimple.TableSwitchStmt;
 import soot.jimple.ThrowStmt;
-import soot.tagkit.AttributeValueException;
-import soot.tagkit.Tag;
 import soot.toolkits.graph.UnitGraph;
 import soot.toolkits.scalar.ForwardBranchedFlowAnalysis;
 
@@ -37,13 +35,11 @@ public abstract class JimpleAnalysis<T> extends ForwardBranchedFlowAnalysis<T> {
 		return;
 	}
 
-	protected void flowThroughIdentity(T in, IdentityStmt s, List<T> fall,
-			List<T> branch) {
+	protected void flowThroughIdentity(T in, IdentityStmt s, List<T> fall, List<T> branch) {
 		return;
 	}
 
-	protected void flowThroughAssign(T in, AssignStmt s, List<T> fall,
-			List<T> branch) {
+	protected void flowThroughAssign(T in, AssignStmt s, List<T> fall, List<T> branch) {
 		return;
 	}
 
@@ -51,48 +47,39 @@ public abstract class JimpleAnalysis<T> extends ForwardBranchedFlowAnalysis<T> {
 		return;
 	}
 
-	protected void flowThroughGoto(T in, GotoStmt s, List<T> fall,
-			List<T> branch) {
+	protected void flowThroughGoto(T in, GotoStmt s, List<T> fall, List<T> branch) {
 		return;
 	}
 
-	protected void flowThroughTableSwitch(T in, TableSwitchStmt s,
-			List<T> fall, List<T> branch) {
+	protected void flowThroughTableSwitch(T in, TableSwitchStmt s, List<T> fall, List<T> branch) {
 		return;
 	}
 
-	protected void flowThroughLookupSwitch(T in, LookupSwitchStmt s,
-			List<T> fall, List<T> branch) {
+	protected void flowThroughLookupSwitch(T in, LookupSwitchStmt s, List<T> fall, List<T> branch) {
 		return;
 	}
 
-	protected void flowThroughInvoke(T in, InvokeStmt s, List<T> fall,
-			List<T> branch) {
+	protected void flowThroughInvoke(T in, InvokeStmt s, List<T> fall, List<T> branch) {
 		return;
 	}
 
-	protected void flowThroughReturn(T in, ReturnStmt s, List<T> fall,
-			List<T> branch) {
+	protected void flowThroughReturn(T in, ReturnStmt s, List<T> fall, List<T> branch) {
 		return;
 	}
 
-	protected void flowThroughReturnVoid(T in, ReturnVoidStmt s, List<T> fall,
-			List<T> branch) {
+	protected void flowThroughReturnVoid(T in, ReturnVoidStmt s, List<T> fall, List<T> branch) {
 		return;
 	}
 
-	protected void flowThroughEnterMonitor(T in, EnterMonitorStmt s,
-			List<T> fall, List<T> branch) {
+	protected void flowThroughEnterMonitor(T in, EnterMonitorStmt s, List<T> fall, List<T> branch) {
 		return;
 	}
 
-	protected void flowThroughExitMonitor(T in, ExitMonitorStmt s,
-			List<T> fall, List<T> branch) {
+	protected void flowThroughExitMonitor(T in, ExitMonitorStmt s, List<T> fall, List<T> branch) {
 		return;
 	}
 
-	protected void flowThroughThrow(T in, ThrowStmt s, List<T> fall,
-			List<T> branch) {
+	protected void flowThroughThrow(T in, ThrowStmt s, List<T> fall, List<T> branch) {
 		return;
 	}
 
@@ -102,29 +89,6 @@ public abstract class JimpleAnalysis<T> extends ForwardBranchedFlowAnalysis<T> {
 
 	@Override
 	protected void flowThrough(T in, Unit s, List<T> fall, List<T> branch) {
-		//		System.out.println(s);
-		//
-		//		for (T s : fall) {
-		//			in.copy(s);
-		//		}
-		//		for (T s : branch) {
-		//			in.copy(s);
-		//		}
-		//
-		//		if (in.booleanExpression.length() > 0) {
-		//			logger.info("Tagging statement: " + stmt);
-		//			stmt.addTag(new Tag() {
-		//				@Override
-		//				public byte[] getValue() throws AttributeValueException {
-		//					return in.booleanExpression.getBytes();
-		//				}
-		//
-		//				@Override
-		//				public String getName() {
-		//					return "BooleanExpressionTag";
-		//				}
-		//			});
-		//		}
 		if (s instanceof NopStmt) {
 			flowThroughNop(in, (NopStmt) s, fall, branch);
 		} else if (s instanceof IdentityStmt) {

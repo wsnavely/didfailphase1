@@ -1,4 +1,4 @@
-package cert;
+package cert.didfail.analysis;
 
 import soot.tagkit.AttributeValueException;
 import soot.tagkit.Tag;

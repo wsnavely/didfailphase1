@@ -1,4 +1,4 @@
-package cert;
+package cert.didfail.phase1;
 
 import java.io.IOException;
 import java.util.Map;

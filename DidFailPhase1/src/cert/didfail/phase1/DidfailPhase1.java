@@ -1,6 +1,5 @@
-package cert;
+package cert.didfail.phase1;
 
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -15,9 +14,12 @@ import java.util.Set;
 
 import org.xmlpull.v1.XmlPullParserException;
 
-import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 
+import cert.didfail.analysis.AndroidInfoflowResultsHandler;
+import cert.didfail.analysis.AssignmentAnalysis;
+import cert.didfail.analysis.PathConstraintTag;
+import cert.didfail.analysis.SinkTag;
 import nu.xom.Attribute;
 import nu.xom.Document;
 import nu.xom.Element;
@@ -34,13 +36,11 @@ import soot.Type;
 import soot.jimple.InvokeExpr;
 import soot.jimple.Stmt;
 import soot.jimple.StringConstant;
-import soot.jimple.infoflow.android.InfoflowAndroidConfiguration;
 import soot.jimple.infoflow.handlers.PreAnalysisHandler;
 import soot.jimple.infoflow.results.InfoflowResults;
 import soot.jimple.infoflow.results.ResultSinkInfo;
 import soot.jimple.infoflow.results.ResultSourceInfo;
 import soot.jimple.infoflow.solver.cfg.IInfoflowCFG;
-import soot.jimple.infoflow.taintWrappers.EasyTaintWrapper;
 import soot.jimple.internal.AbstractInstanceInvokeExpr;
 import soot.jimple.internal.AbstractInvokeExpr;
 import soot.tagkit.Tag;
@@ -347,7 +347,7 @@ public class DidfailPhase1 {
 	}
 
 	public static void main(final String[] args) throws IOException, InterruptedException, XmlPullParserException {
-
+/*
 		DidfailArgs jct = new DidfailArgs();
 		new JCommander(jct, args);
 		InfoflowAndroidConfiguration config = FlowDroidFactory.configFromJson(readFile(jct.config));
@@ -375,5 +375,6 @@ public class DidfailPhase1 {
 		String pkg = app.getAppPackage();
 		handler.setAppPackage(pkg);
 		app.runInfoflow(handler, preprocessors);
+		*/
 	}
 }

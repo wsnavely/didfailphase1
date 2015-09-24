@@ -1,4 +1,4 @@
-package cert;
+package cert.didfail.analysis;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -18,6 +18,7 @@ import com.beust.jcommander.Parameter;
 import com.json.generators.JSONGenerator;
 import com.json.generators.JsonGeneratorFactory;
 
+import cert.didfail.phase1.FlowDroidFactory;
 import soot.Body;
 import soot.Hierarchy;
 import soot.PackManager;

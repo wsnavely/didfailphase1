@@ -7,7 +7,7 @@ import java.util.Scanner;
 import org.junit.Assert;
 import org.junit.Test;
 
-import cert.FlowDroidFactory;
+import cert.didfail.phase1.FlowDroidFactory;
 import soot.jimple.infoflow.InfoflowConfiguration.AliasingAlgorithm;
 import soot.jimple.infoflow.InfoflowConfiguration.CallgraphAlgorithm;
 import soot.jimple.infoflow.InfoflowConfiguration.CodeEliminationMode;
