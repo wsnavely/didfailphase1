@@ -19,5 +19,7 @@
 	<classpathentry kind="lib" path="aws-sdk/third-party/spring-3.0/spring-context-3.0.7.jar"/>
 	<classpathentry kind="lib" path="aws-sdk/third-party/spring-3.0/spring-core-3.0.7.jar"/>
 	<classpathentry kind="lib" path="lib/jsch-0.1.53.jar"/>
+	<classpathentry kind="lib" path="lib/quick-json-1.0.2.3.jar"/>
+	<classpathentry kind="lib" path="lib/jcommander-1.48.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

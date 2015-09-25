@@ -1,5 +1,5 @@
 {
-        "experimentId": "smeagol",
+        "experimentId": "id",
         "instanceCount": 5,
         "instanceId": "ami-21295e44",
         "instanceType": "r3.xlarge",
@@ -11,6 +11,7 @@
         "apkPathFile": "/home/osboxes/git/didfailphase1/DidfailAWS/input_paths",
         "useProxy": true,
         "proxyHost": "proxy.sei.cmu.edu",
-        "proxyPort": 8080
+        "proxyPort": 8080,
+	"jvmHeapSize": "20000m"
 }
 
