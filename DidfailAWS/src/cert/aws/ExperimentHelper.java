@@ -1,4 +1,4 @@
-package cert.action;
+package cert.aws;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,7 +13,7 @@ import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ec2.model.Reservation;
 
-import cert.config.ExperimentConfig;
+import cert.aws.config.ExperimentConfig;
 
 public class ExperimentHelper {
 

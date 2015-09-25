@@ -1,4 +1,4 @@
-package cert.action;
+package cert.aws;
 
 import com.beust.jcommander.Parameter;
 

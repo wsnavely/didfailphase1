@@ -1,4 +1,4 @@
-package cert.config;
+package cert.aws.config;
 
 import java.io.File;
 import java.io.FileInputStream;

@@ -1,4 +1,4 @@
-package cert.action;
+package cert.aws;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -24,7 +24,7 @@ import com.amazonaws.services.ec2.model.RunInstancesRequest;
 import com.amazonaws.services.ec2.model.RunInstancesResult;
 import com.beust.jcommander.JCommander;
 
-import cert.config.ExperimentConfig;
+import cert.aws.config.ExperimentConfig;
 
 public class CreateInstancesStep extends ExperimentStep {
 	private String instanceType;

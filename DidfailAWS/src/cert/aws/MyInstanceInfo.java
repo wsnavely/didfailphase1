@@ -1,4 +1,4 @@
-package cert.action;
+package cert.aws;
 
 public class MyInstanceInfo {
 	public String id;

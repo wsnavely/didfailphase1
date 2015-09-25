@@ -1,11 +1,11 @@
-package cert.action;
+package cert.aws;
 
 import java.util.List;
 
 import com.amazonaws.services.ec2.AmazonEC2;
 
-import cert.SSHSession;
-import cert.SSHSession.AuthMethod;
+import cert.util.SSHSession;
+import cert.util.SSHSession.AuthMethod;
 
 public abstract class SSHSessionStep extends ExperimentStep {
 	protected List<MyInstanceInfo> instanceInfos;

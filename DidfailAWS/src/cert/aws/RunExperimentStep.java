@@ -1,12 +1,12 @@
-package cert.action;
+package cert.aws;
 
 import java.util.List;
 
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.beust.jcommander.JCommander;
 
-import cert.SSHSession;
-import cert.config.ExperimentConfig;
+import cert.aws.config.ExperimentConfig;
+import cert.util.SSHSession;
 
 public class RunExperimentStep extends SSHSessionStep {
 	private String experimentId;

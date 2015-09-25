@@ -1,4 +1,4 @@
-package cert;
+package cert.util;
 
 import java.io.InputStream;
 

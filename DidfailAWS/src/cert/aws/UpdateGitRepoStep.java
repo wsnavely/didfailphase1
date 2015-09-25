@@ -1,37 +1,21 @@
-package cert.action;
+package cert.aws;
 
 import java.util.List;
-import java.util.Scanner;
 
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.beust.jcommander.JCommander;
 
-import cert.SSHSession;
-import cert.config.ExperimentConfig;
+import cert.aws.config.ExperimentConfig;
+import cert.util.SSHSession;
 
-public class RunShellCommands extends SSHSessionStep {
-	public RunShellCommands(AmazonEC2 ec2Conn, ExperimentConfig config) {
+public class UpdateGitRepoStep extends SSHSessionStep {
+	public UpdateGitRepoStep(AmazonEC2 ec2Conn) {
 		super(ec2Conn);
-	}
-
-	private String cmd;
-
-	@Override
-	public void runAction() {
-		Scanner in = new Scanner(System.in);
-		try {
-			while (true) {
-				this.cmd = in.nextLine();
-				super.runAction();
-			}
-		} finally {
-			in.close();
-		}
 	}
 
 	@Override
 	public void runCommands(MyInstanceInfo info, SSHSession session) {
-		System.out.printf("[%s]\n%s\n", info.ip, session.sendCommand(this.cmd));
+		session.sendCommand("cd /home/ubuntu/flowdroid-runner;git pull");
 	}
 
 	public static void main(String[] args) throws Exception {
@@ -40,10 +24,10 @@ public class RunShellCommands extends SSHSessionStep {
 		ExperimentConfig config = ExperimentConfig.loadConfig(jct.workingDir);
 		AmazonEC2 conn = ExperimentHelper.getConnection(config);
 		List<MyInstanceInfo> infos = ExperimentHelper.getInstanceInfo(conn, config);
-		RunShellCommands step = new RunShellCommands(conn, config);
-		step.setInstanceInfos(infos);
+		UpdateGitRepoStep step = new UpdateGitRepoStep(conn);
 		step.setLogin(config.login);
 		step.setKeyFile(config.privateKeyFile);
+		step.setInstanceInfos(infos);
 		step.runAction();
 	}
 }

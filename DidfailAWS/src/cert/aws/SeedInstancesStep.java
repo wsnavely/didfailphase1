@@ -1,4 +1,4 @@
-package cert.action;
+package cert.aws;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -11,8 +11,8 @@ import java.util.Map;
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.beust.jcommander.JCommander;
 
-import cert.SSHSession;
-import cert.config.ExperimentConfig;
+import cert.aws.config.ExperimentConfig;
+import cert.util.SSHSession;
 
 public class SeedInstancesStep extends SSHSessionStep {
 	private String apkPathListFile;

@@ -1,4 +1,4 @@
-package cert.action;
+package cert.aws;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -7,7 +7,7 @@ import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.model.TerminateInstancesRequest;
 import com.beust.jcommander.JCommander;
 
-import cert.config.ExperimentConfig;
+import cert.aws.config.ExperimentConfig;
 
 public class CleanupInstancesStep extends ExperimentStep {
 	protected List<MyInstanceInfo> instanceInfos;
