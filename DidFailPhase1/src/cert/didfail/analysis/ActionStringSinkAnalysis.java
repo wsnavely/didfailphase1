@@ -19,6 +19,7 @@ import com.json.generators.JSONGenerator;
 import com.json.generators.JsonGeneratorFactory;
 
 import cert.didfail.phase1.FlowDroidFactory;
+import cert.didfail.phase1.MySetupApplication;
 import soot.Body;
 import soot.Hierarchy;
 import soot.PackManager;

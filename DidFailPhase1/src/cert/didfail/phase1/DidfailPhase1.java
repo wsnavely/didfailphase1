@@ -14,11 +14,13 @@ import java.util.Set;
 
 import org.xmlpull.v1.XmlPullParserException;
 
+import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 
 import cert.didfail.analysis.AndroidInfoflowResultsHandler;
 import cert.didfail.analysis.AssignmentAnalysis;
 import cert.didfail.analysis.PathConstraintTag;
+import cert.didfail.analysis.SinkLabeler;
 import cert.didfail.analysis.SinkTag;
 import nu.xom.Attribute;
 import nu.xom.Document;
@@ -36,13 +38,16 @@ import soot.Type;
 import soot.jimple.InvokeExpr;
 import soot.jimple.Stmt;
 import soot.jimple.StringConstant;
+import soot.jimple.infoflow.android.InfoflowAndroidConfiguration;
 import soot.jimple.infoflow.handlers.PreAnalysisHandler;
 import soot.jimple.infoflow.results.InfoflowResults;
 import soot.jimple.infoflow.results.ResultSinkInfo;
 import soot.jimple.infoflow.results.ResultSourceInfo;
 import soot.jimple.infoflow.solver.cfg.IInfoflowCFG;
+import soot.jimple.infoflow.taintWrappers.EasyTaintWrapper;
 import soot.jimple.internal.AbstractInstanceInvokeExpr;
 import soot.jimple.internal.AbstractInvokeExpr;
+import soot.options.Options;
 import soot.tagkit.Tag;
 import soot.toolkits.graph.ExceptionalUnitGraph;
 import soot.util.MultiMap;
@@ -70,6 +75,9 @@ public class DidfailPhase1 {
 
 		@Parameter(names = "-tw")
 		private String taintWrapper = null;
+
+		@Parameter(names = "-labelsinks")
+		private boolean labelSinks = false;
 	}
 
 	private static class DidfailPreprocessor implements PreAnalysisHandler {
@@ -102,13 +110,11 @@ public class DidfailPhase1 {
 	private static final class DidfailResultHandler extends AndroidInfoflowResultsHandler {
 		private File output;
 		private int intentId = 1;
+		private boolean labelSinks;
 
-		private DidfailResultHandler() {
-			this.output = null;
-		}
-
-		private DidfailResultHandler(File output) {
+		private DidfailResultHandler(File output, boolean labelSinks) {
 			this.output = output;
+			this.labelSinks = labelSinks;
 		}
 
 		public Element handleSink(ResultSinkInfo sinkInfo, IInfoflowCFG cfg, InfoflowResults results) {
@@ -240,52 +246,47 @@ public class DidfailPhase1 {
 
 		@Override
 		public void onResultsAvailable(IInfoflowCFG cfg, InfoflowResults results) {
-			try {
-				Element root = handleResults(cfg, results);
-				Document doc = new Document(root);
-				OutputStream os = null;
 
-				try {
-					if (this.output != null) {
-						os = new FileOutputStream(this.output);
-					} else {
-						os = System.out;
-					}
-					Serializer serializer = new Serializer(os, "UTF-8");
-					serializer.setIndent(4);
-					serializer.setMaxLength(64);
-					serializer.write(doc);
-				} catch (IOException ex) {
-					ex.printStackTrace();
-				} finally {
-					if (this.output != null && os != null) {
-						try {
-							os.close();
-						} catch (IOException e) {
-							e.printStackTrace();
-						}
+			Element root = handleResults(cfg, results);
+			Document doc = new Document(root);
+			OutputStream os = null;
+
+			try {
+				if (this.output != null) {
+					os = new FileOutputStream(this.output);
+				} else {
+					os = System.out;
+				}
+				Serializer serializer = new Serializer(os, "UTF-8");
+				serializer.setIndent(4);
+				serializer.setMaxLength(64);
+				serializer.write(doc);
+			} catch (IOException ex) {
+				ex.printStackTrace();
+			} finally {
+				if (this.output != null && os != null) {
+					try {
+						os.close();
+					} catch (IOException e) {
+						e.printStackTrace();
 					}
 				}
+			}
 
-				/*
-				 * Options.v().set_output_format(Options.output_format_dex);
-				 * PackManager.v().getPack("wjtp").add(new
-				 * Transform("wjtp.myInstrumenter", new SinkLabeler()));
-				 * PackManager.v().getPack("wjtp").apply();
-				 * PackManager.v().writeOutput();
-				 */
-			} finally {
-
+			if (this.labelSinks) {
+				Options.v().set_output_format(Options.output_format_dex);
+				PackManager.v().getPack("wjtp").add(new Transform("wjtp.myInstrumenter", new SinkLabeler()));
+				PackManager.v().getPack("wjtp").apply();
+				PackManager.v().writeOutput();
 			}
 		}
-
 	}
 
 	public static void usage() {
 		System.err.println("Usage: [<outfile>] -- <flowdroid arguments>");
 	}
 
-	private static String readFile(String pathname) throws IOException {
+	public static String readFile(String pathname) throws IOException {
 		File file = new File(pathname);
 		StringBuilder fileContents = new StringBuilder((int) file.length());
 		Scanner scanner = new Scanner(file);
@@ -347,7 +348,7 @@ public class DidfailPhase1 {
 	}
 
 	public static void main(final String[] args) throws IOException, InterruptedException, XmlPullParserException {
-/*
+
 		DidfailArgs jct = new DidfailArgs();
 		new JCommander(jct, args);
 		InfoflowAndroidConfiguration config = FlowDroidFactory.configFromJson(readFile(jct.config));
@@ -366,15 +367,13 @@ public class DidfailPhase1 {
 		List<PreAnalysisHandler> preprocessors = new ArrayList<PreAnalysisHandler>();
 		preprocessors.add(new DidfailPreprocessor());
 
-		BufferedWriter bw = null;
 		File out = null;
 		if (jct.outfile != null) {
 			out = new File(jct.outfile);
 		}
-		DidfailResultHandler handler = new DidfailResultHandler(out);
+		DidfailResultHandler handler = new DidfailResultHandler(out, jct.labelSinks);
 		String pkg = app.getAppPackage();
 		handler.setAppPackage(pkg);
 		app.runInfoflow(handler, preprocessors);
-		*/
 	}
 }

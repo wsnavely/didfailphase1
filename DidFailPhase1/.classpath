@@ -11,5 +11,6 @@
 	<classpathentry kind="lib" path="lib/AXMLPrinter2.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
 	<classpathentry kind="lib" path="lib/xom-1.2.10.jar"/>
+	<classpathentry kind="lib" path="/home/osboxes/git/ic3/target/ic3-0.2.0-full.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
