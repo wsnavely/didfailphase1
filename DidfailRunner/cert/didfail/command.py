@@ -3,22 +3,46 @@ import subprocess
 import threading
 import time
     
-def run_command(
+class CmdSettings(object):
+    def __init__(self):
+        self.stdout = None
+        self.stderr = None
+        self.cwd = None
+        self.env = None
+        self.monitor_action = None
+        self.monitor_interval = None
+        self.timeout = None
+
+def run_cmd_with_settings(cmd, args, settings):
+    return run_cmd(
         cmd,
         args,
-        stdout=None,
-        stderr=None,
+        stdout=settings.stdout,
+        stderr=settings.stderr,
+        cwd=settings.cwd,
+        env=settings.env,
+        monitor_action=settings.monitor_action,
+        monitor_interval=settings.monitor_interval,
+        timeout=settings.timeout)
+    
+def run_cmd(
+        cmd,
+        args,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
         cwd=None,
         env=None,
         monitor_action=None,
         monitor_interval=1.0,
         timeout=None):
     
-    class CommandResult(object):
-        def __init__(self, rc, wt, to):
+    class CmdResult(object):
+        def __init__(self, rc, wt, to, out, err):
             self.return_code = rc
             self.wall_time = wt
             self.timed_out = to
+            self.out = out
+            self.err = err
         
         def __str__(self, *args, **kwargs):
             return "(RC={0},WT={1},TO={2})".format(self.return_code, self.wall_time, self.timed_out)
@@ -28,18 +52,18 @@ def run_command(
             self.process = None
             self.done = False
             self.process_started = threading.Condition()
+            self.output = None
             
     shared_data = SharedData()
     
     def run_process():
         pkg = [cmd] + args
         logging.debug("Running Command (Timeout: {0}):\n{1}".format(timeout, (" ".join(pkg))))
-        
         shared_data.process_started.acquire()
         shared_data.process = subprocess.Popen(pkg, stdout=stdout, stderr=stderr, cwd=cwd, env=env)
         shared_data.process_started.notify()
         shared_data.process_started.release()
-        shared_data.process.communicate()
+        shared_data.output = shared_data.process.communicate()
 
     def monitor_process():
         shared_data.process_started.acquire()
@@ -76,5 +100,6 @@ def run_command(
         main_thread.join()
 
     rc = shared_data.process.returncode
+    out, err = shared_data.output
     wall_time = end_time - start_time
-    return CommandResult(rc, wall_time, timed_out)
+    return CmdResult(rc, wall_time, timed_out, out, err)
