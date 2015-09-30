@@ -1,19 +1,14 @@
 #!/usr/local/bin/python2.7
 # encoding: utf-8
 '''
-cert.didfail.phase1 -- Runs the first phase of a Didfail analysis, on a set of APKs.
-
-cert.didfail.phase1
-
-@author:     TODO
-@contact:    TODO
+cert.didfail.phase1 -- Runs the first phase of the Didfail analysis, on a set of APKs.
 '''
 
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
+import logging
 import errno
 import json
-import logging
 import os
 import sys
 
@@ -21,28 +16,6 @@ from cert.didfail.flowdroid import run_flowdroid, FlowdroidOptions
 from cert.didfail.interapp import ICOptions, run_ic
 from cert.didfail.retarget import DareOptions, run_dare
 import command
-
-
-__all__ = []
-__version__ = 0.1
-__date__ = '2015-09-29'
-__updated__ = '2015-09-29'
-
-DEBUG = 1
-
-class DidfailSettings(object):
-    def __init__(self):
-        pass
-
-class CLIError(Exception):
-    '''Generic exception to raise and log different fatal errors.'''
-    def __init__(self, msg):
-        super(CLIError).__init__(type(self))
-        self.msg = "E: %s" % msg
-    def __str__(self):
-        return self.msg
-    def __unicode__(self):
-        return self.msg
 
 def mkdir_p(path):
     try:
@@ -76,6 +49,14 @@ def get_ic3_options(conf):
         if "heap_size" in options:
             ic_options.heap_size = options["heap_size"]
     return ic_options
+
+def get_dare_options(conf):
+    dare_options = DareOptions()
+    if conf and ("options" in conf) and ("dare" in conf["options"]):
+        options = conf["options"]["dare"]
+        if "timeout" in options:
+            dare_options.timeout = options["timeout"]
+    return dare_options
         
 def process_apk(path, outdir, fd_opt, ic_opt, dare_opt):
     logging.debug("Processing APK: " + path)
@@ -124,7 +105,7 @@ def main(argv=None):
         
         fd_opt = get_flowdroid_options(config)
         ic_opt = get_ic3_options(config)
-        dare_opt = DareOptions()
+        dare_opt = get_dare_options(config)
                 
         apks = args.apks
         outdir = os.path.realpath(args.out)
@@ -135,9 +116,7 @@ def main(argv=None):
         
     except KeyboardInterrupt:
         return 0
-    
 
 if __name__ == "__main__":
-    if DEBUG:
-        logging.basicConfig(level="DEBUG")
+    logging.basicConfig(level="DEBUG")
     sys.exit(main())

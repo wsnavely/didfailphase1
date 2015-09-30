@@ -11,5 +11,9 @@
         	"heap_size": 	"4096m",
         	"timeout": 		900
 		}
+		
+		"dare": {
+        	"timeout": 		900
+		}
 	}
 }
