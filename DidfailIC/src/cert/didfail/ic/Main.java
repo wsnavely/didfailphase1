@@ -36,8 +36,8 @@ public class Main {
 		@Parameter(names = "-androidjar", required = true)
 		private String androidJar;
 
-		@Parameter(names = "-retargetedApp", required = true)
-		private String retargetedApp;
+		@Parameter(names = "-retargeted", required = true)
+		private String retargeted;
 
 		@Parameter(names = "-out")
 		private String out = null;
@@ -54,7 +54,7 @@ public class Main {
 		}
 
 		IC3Wrapper wrapper = new IC3Wrapper();
-		wrapper.setRetargetedPath(jct.retargetedApp);
+		wrapper.setRetargetedPath(jct.retargeted);
 		wrapper.setApkPath(jct.apk);
 		wrapper.setAndroidJarPath(jct.androidJar);
 		wrapper.runAnalysis();

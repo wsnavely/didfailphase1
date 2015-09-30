@@ -2,7 +2,7 @@ import logging
 import subprocess
 import threading
 import time
-    
+
 class CmdSettings(object):
     def __init__(self):
         self.stdout = None

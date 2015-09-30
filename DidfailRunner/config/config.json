@@ -1,9 +1,15 @@
 {
-	"settings": {
+	"options": {
 		"flowdroid": {
-		}
+			"platforms":	"/home/osboxes/Android/Sdk/platforms",
+        	"heap_size": 	"4096m",
+        	"timeout": 		900
+		},
 		
-		"ic": {
+		"ic3": {
+			"androidjar":	"/home/osboxes/local/ic3-0.1.0/android.jar",
+        	"heap_size": 	"4096m",
+        	"timeout": 		900
 		}
 	}
 }

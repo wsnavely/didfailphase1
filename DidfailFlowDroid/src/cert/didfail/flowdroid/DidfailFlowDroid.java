@@ -62,6 +62,9 @@ public class DidfailFlowDroid {
 		@Parameter(names = "-out")
 		private String outfile = null;
 
+		@Parameter(names = "-sootout")
+		private String sootOutDir = null;
+
 		@Parameter(names = "-config")
 		private String config;
 
@@ -106,10 +109,12 @@ public class DidfailFlowDroid {
 		private File output;
 		private int intentId = 1;
 		private boolean labelSinks;
+		private String sootOutputDir;
 
-		private DidfailResultHandler(File output, boolean labelSinks) {
+		private DidfailResultHandler(File output, boolean labelSinks, String sootOutputDir) {
 			this.output = output;
 			this.labelSinks = labelSinks;
+			this.sootOutputDir = sootOutputDir;
 		}
 
 		public Element handleSink(ResultSinkInfo sinkInfo, IInfoflowCFG cfg, InfoflowResults results) {
@@ -270,6 +275,9 @@ public class DidfailFlowDroid {
 
 			if (this.labelSinks) {
 				Options.v().set_output_format(Options.output_format_dex);
+				if (this.sootOutputDir != null) {
+					Options.v().set_output_dir(this.sootOutputDir);
+				}
 				PackManager.v().getPack("wjtp").add(new Transform("wjtp.myInstrumenter", new SinkLabeler()));
 				PackManager.v().getPack("wjtp").apply();
 				PackManager.v().writeOutput();
@@ -366,7 +374,7 @@ public class DidfailFlowDroid {
 		if (jct.outfile != null) {
 			out = new File(jct.outfile);
 		}
-		DidfailResultHandler handler = new DidfailResultHandler(out, jct.labelSinks);
+		DidfailResultHandler handler = new DidfailResultHandler(out, jct.labelSinks, jct.sootOutDir);
 		String pkg = app.getAppPackage();
 		handler.setAppPackage(pkg);
 		app.runInfoflow(handler, preprocessors);
