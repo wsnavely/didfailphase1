@@ -10,7 +10,7 @@
 			"androidjar":	"/home/osboxes/local/ic3-0.1.0/android.jar",
         	"heap_size": 	"4096m",
         	"timeout": 		900
-		}
+		},
 		
 		"dare": {
         	"timeout": 		900

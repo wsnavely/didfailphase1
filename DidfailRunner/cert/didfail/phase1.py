@@ -6,11 +6,15 @@ cert.didfail.phase1 -- Runs the first phase of the Didfail analysis, on a set of
 
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
+import xml.etree.ElementTree as ET
 import logging
 import errno
 import json
 import os
 import sys
+import zipfile
+import axmlparserpy.axmlprinter as axmlprinter
+import xml.dom.minidom
 
 from cert.didfail.flowdroid import run_flowdroid, FlowdroidOptions
 from cert.didfail.interapp import ICOptions, run_ic
@@ -80,7 +84,33 @@ def process_apk(path, outdir, fd_opt, ic_opt, dare_opt):
     retgt = os.path.join(dare_out, "retargeted")
     retgt = os.path.join(retgt, apk_name.replace(".apk", "")) 
     run_ic(tform, retgt, ic_out, ic_opt)
+    
+    manifest = os.path.join(apk_outdir, "AndroidManifest.xml")
+    with zipfile.ZipFile(tform) as z:
+        ap = axmlprinter.AXMLPrinter(z.read("AndroidManifest.xml"))
+        buff = xml.dom.minidom.parseString(ap.getBuff()).toxml()
+        with open(os.path.join(manifest), 'wb') as f:
+            f.write(buff)
 
+    fd_data = ET.parse(fd_out)
+    fd_root = fd_data.getroot()
+    ic_data = ET.parse(ic_out)
+    ic_root = ic_data.getroot()
+    man_data = ET.parse(manifest)
+    man_root = man_data.getroot()
+        
+    fd_root.tag = "fd_results"
+    ic_root.tag = "ic_results"
+    new_root = ET.Element("analysis_results")
+    new_root.attrib["apk"] = apk_name
+    new_root.append(fd_root)
+    new_root.append(ic_root)
+    man_root.append(new_root)
+    results = ET.tostring(man_root, encoding="utf-8")
+    results_out = os.path.join(apk_outdir, apk_name + ".xml")
+    with open(results_out, 'w') as outfile:
+        outfile.write(results)    
+        
 def main(argv=None):
     if argv is None:
         argv = sys.argv
