@@ -140,10 +140,8 @@ public class MySetupApplication {
 			IIPCManager ipcManager) {
 		File f = new File(androidJar);
 		this.forceAndroidJar = f.isFile();
-
 		this.androidJar = androidJar;
 		this.apkFileLocation = apkFileLocation;
-
 		this.ipcManager = ipcManager;
 		this.additionalClasspath = additionalClasspath;
 	}
@@ -179,61 +177,6 @@ public class MySetupApplication {
 	 */
 	public Set<SourceSinkDefinition> getSources() {
 		return this.sourceSinkProvider == null ? null : this.sourceSinkProvider.getSources();
-	}
-
-	/**
-	 * Prints the list of sources registered with FlowDroud to stdout
-	 */
-	public void printSources() {
-		if (this.sourceSinkProvider == null) {
-			System.err.println("Sources not calculated yet");
-			return;
-		}
-		System.out.println("Sources:");
-		for (SourceSinkDefinition am : getSources()) {
-			System.out.println(am.toString());
-		}
-		System.out.println("End of Sources");
-	}
-
-	/**
-	 * Gets the set of classes containing entry point methods for the lifecycle
-	 * 
-	 * @return The set of classes containing entry point methods for the
-	 *         lifecycle
-	 */
-	public Set<String> getEntrypointClasses() {
-		return entrypoints;
-	}
-
-	/**
-	 * Prints list of classes containing entry points to stdout
-	 */
-	public void printEntrypoints() {
-		if (this.entrypoints == null)
-			System.out.println("Entry points not initialized");
-		else {
-			System.out.println("Classes containing entry points:");
-			for (String className : entrypoints)
-				System.out.println("\t" + className);
-			System.out.println("End of Entrypoints");
-		}
-	}
-
-	/**
-	 * Sets the class names of callbacks. If this value is null, it
-	 * automatically loads the names from AndroidCallbacks.txt as the default
-	 * behavior.
-	 * 
-	 * @param callbackClasses
-	 *            The class names of callbacks or null to use the default file.
-	 */
-	public void setCallbackClasses(Set<String> callbackClasses) {
-		this.callbackClasses = callbackClasses;
-	}
-
-	public Set<String> getCallbackClasses() {
-		return callbackClasses;
 	}
 
 	/**
@@ -281,7 +224,6 @@ public class MySetupApplication {
 			sinkDefs.add(new SourceSinkDefinition(am));
 
 		ISourceSinkDefinitionProvider parser = new ISourceSinkDefinitionProvider() {
-
 			@Override
 			public Set<SourceSinkDefinition> getSources() {
 				return sourceDefs;
@@ -685,10 +627,10 @@ public class MySetupApplication {
 				+ " sources and " + getSinks().size() + " sinks...");
 		Infoflow info;
 		if (cfgFactory == null)
-			info = new Infoflow(androidJar, forceAndroidJar, null,
+			info = new MyInfoflow(androidJar, forceAndroidJar, null,
 					new DefaultPathBuilderFactory(config.getPathBuilder(), config.getComputeResultPaths()));
 		else
-			info = new Infoflow(androidJar, forceAndroidJar, cfgFactory,
+			info = new MyInfoflow(androidJar, forceAndroidJar, cfgFactory,
 					new DefaultPathBuilderFactory(config.getPathBuilder(), config.getComputeResultPaths()));
 
 		if (preprocessors != null) {

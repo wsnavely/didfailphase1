@@ -7,6 +7,7 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
@@ -22,15 +23,22 @@ import nu.xom.Document;
 import nu.xom.Element;
 import nu.xom.Serializer;
 import soot.Body;
+import soot.BodyTransformer;
 import soot.Hierarchy;
+import soot.Local;
 import soot.PackManager;
+import soot.PatchingChain;
+import soot.RefType;
 import soot.Scene;
 import soot.SceneTransformer;
 import soot.SootClass;
 import soot.SootMethod;
 import soot.Transform;
 import soot.Type;
+import soot.Unit;
+import soot.Value;
 import soot.jimple.InvokeExpr;
+import soot.jimple.Jimple;
 import soot.jimple.Stmt;
 import soot.jimple.StringConstant;
 import soot.jimple.infoflow.android.InfoflowAndroidConfiguration;
@@ -48,6 +56,94 @@ import soot.toolkits.graph.ExceptionalUnitGraph;
 import soot.util.MultiMap;
 
 public class DidfailFlowDroid {
+	static class SinkLabeler2 extends BodyTransformer {
+		static int numSendIntentMethods = 0;
+		static String newField = "newField_";
+
+		private static Local addTmpRef(Body body) {
+			Local tmpRef = Jimple.v().newLocal("tmpRef", RefType.v("java.io.PrintStream"));
+			body.getLocals().add(tmpRef);
+			return tmpRef;
+		}
+
+		public static boolean intentSinkMethod(Stmt stmt) {
+			if (!stmt.containsInvokeExpr()) {
+				return false;
+			}
+
+			SootClass activityClass;
+			boolean isActivity;
+			boolean result = false;
+			// @formatter:off
+			String[] candidates = { 
+					"void startActivity(android.content.Intent)",
+					"void startActivityForResult(android.content.Intent,int)",
+					"void startActivityForResult(android.content.Intent,int,android.os.Bundle)" };
+			// @formatter:on
+
+			AbstractInvokeExpr ie = (AbstractInvokeExpr) stmt.getInvokeExpr();
+			SootMethod meth = ie.getMethod();
+			String methodSubSig = meth.getSubSignature();
+
+			for (String sig : candidates) {
+				if (methodSubSig.contains(sig)) {
+					activityClass = Scene.v().getSootClass("android.app.Activity");
+					isActivity = (new Hierarchy()).isClassSuperclassOfIncluding(activityClass,
+							meth.getDeclaringClass());
+					if (isActivity == true) {
+						result = true;
+						break;
+					}
+				}
+			}
+			return result;
+		}
+
+		@Override
+		protected void internalTransform(Body b, String phaseName, Map<String, String> options) {
+			final PatchingChain<Unit> units = b.getUnits();
+			Value val2, val3;
+			Type argType;
+			Local tmpRef;
+
+			for (Iterator<Unit> iter = units.snapshotIterator(); iter.hasNext();) {
+				Unit u = iter.next();
+				Stmt stmt = (Stmt) u;
+				int id;
+
+				boolean containsInvoke = stmt.containsInvokeExpr();
+				boolean hasTag = stmt.hasTag("SinkTag");
+				boolean isIntentSink = intentSinkMethod(stmt);
+
+				if (!containsInvoke || !hasTag || !isIntentSink) {
+					continue;
+				}
+
+				InvokeExpr invokeExpr = stmt.getInvokeExpr();
+				SinkTag tag = (SinkTag) stmt.getTag("SinkTag");
+				id = tag.getId();
+
+				for (Value arg : invokeExpr.getArgs()) {
+					argType = arg.getType();
+					if (argType.toString().contentEquals("android.content.Intent")) {
+						String tempString = newField.concat(Integer.toString(id));
+
+						tmpRef = addTmpRef(b);
+						tmpRef = (Local) arg;
+						SootMethod toCall = Scene.v().getSootClass("android.content.Intent")
+								.getMethod("android.content.Intent putExtra(java.lang.String,java.lang.String)");
+						val2 = StringConstant.v(tempString);
+						val3 = StringConstant.v(tempString);
+						System.out.println("INSERTING!");
+						units.insertBefore(Jimple.v().newInvokeStmt(
+								Jimple.v().newVirtualInvokeExpr(tmpRef, toCall.makeRef(), val2, val3)), u);
+						stmt.removeAllTags();
+					}
+				}
+			}
+
+		}
+	}
 
 	static class DidfailArgs {
 		@Parameter
@@ -214,7 +310,6 @@ public class DidfailFlowDroid {
 
 		public Element handleResults(IInfoflowCFG cfg, InfoflowResults results) {
 			Element root = new Element("results");
-			root.addAttribute(new Attribute("package", this.getAppPackage()));
 
 			if (results != null) {
 				MultiMap<ResultSinkInfo, ResultSourceInfo> resultInfos;
@@ -230,6 +325,11 @@ public class DidfailFlowDroid {
 				for (ResultSinkInfo sinkInfo : sinks) {
 					Element flow = new Element("flow");
 					flow.appendChild(handleSink(sinkInfo, cfg, results));
+					SootMethod sm = cfg.getMethodOf(sinkInfo.getSink());
+					SootClass cls = sm.getDeclaringClass();
+					cls.setApplicationClass();
+					Body b = sm.retrieveActiveBody();
+					new SinkLabeler2().transform(b);
 
 					Set<ResultSourceInfo> srcSet = resultInfos.get(sinkInfo);
 					List<ResultSourceInfo> srcs = new ArrayList<ResultSourceInfo>(srcSet);
@@ -274,12 +374,10 @@ public class DidfailFlowDroid {
 			}
 
 			if (this.labelSinks) {
-				Options.v().set_output_format(Options.output_format_dex);
 				if (this.sootOutputDir != null) {
 					Options.v().set_output_dir(this.sootOutputDir);
+					Options.v().set_force_overwrite(true);
 				}
-				PackManager.v().getPack("wjtp").add(new Transform("wjtp.myInstrumenter", new SinkLabeler()));
-				PackManager.v().getPack("wjtp").apply();
 				PackManager.v().writeOutput();
 			}
 		}
@@ -374,6 +472,7 @@ public class DidfailFlowDroid {
 		if (jct.outfile != null) {
 			out = new File(jct.outfile);
 		}
+		
 		DidfailResultHandler handler = new DidfailResultHandler(out, jct.labelSinks, jct.sootOutDir);
 		String pkg = app.getAppPackage();
 		handler.setAppPackage(pkg);

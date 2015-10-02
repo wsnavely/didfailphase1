@@ -130,21 +130,4 @@ public class FlowDroidFactory {
 
 		return config;
 	}
-
-	public static SetupApplication runAnalysis(
-			//@formatter:off
-			String apk, 
-			String platforms, 
-			String sourcesAndSinks,
-			InfoflowAndroidConfiguration config, 
-			ITaintPropagationWrapper taintWrapper,
-			ResultsAvailableHandler resultHandler)  
-			//@formatter:on 
-					throws IOException, XmlPullParserException {
-		SetupApplication app = new SetupApplication(platforms, apk);
-		app.setConfig(config);
-		app.setTaintWrapper(taintWrapper);
-		app.calculateSourcesSinksEntrypoints(sourcesAndSinks);
-		return app;
-	}
 }

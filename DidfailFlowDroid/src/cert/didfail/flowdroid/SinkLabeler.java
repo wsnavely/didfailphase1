@@ -94,6 +94,7 @@ public class SinkLabeler extends SceneTransformer {
 							.getMethod("android.content.Intent putExtra(java.lang.String,java.lang.String)");
 					val2 = StringConstant.v(tempString);
 					val3 = StringConstant.v(tempString);
+					System.out.println("INSERTING!");
 					units.insertBefore(Jimple.v()
 							.newInvokeStmt(Jimple.v().newVirtualInvokeExpr(tmpRef, toCall.makeRef(), val2, val3)), u);
 				}

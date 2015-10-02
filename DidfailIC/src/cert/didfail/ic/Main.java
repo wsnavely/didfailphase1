@@ -1,4 +1,5 @@
 package cert.didfail.ic;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -61,6 +62,34 @@ public class Main {
 		handleResults(output);
 	}
 
+	public static void handlePropagationValue(PropagationValue pv, Element ic) {
+		for (PathValue pathValue : pv.getPathValues()) {
+			Map<String, FieldValue> fieldMap = pathValue.getFieldMap();
+			for (String field : fieldMap.keySet()) {
+				Element fieldElem = new Element("field");
+				FieldValue fieldValue = fieldMap.get(field);
+				Object value = fieldValue.getValue();
+				fieldElem.addAttribute(new Attribute("name", field));
+				if (value != null) {
+					if (value instanceof Iterable) {
+						@SuppressWarnings("rawtypes")
+						Iterable iter = (Iterable) value;
+						for (Object v : iter) {
+							Element valueElem = new Element("value");
+							valueElem.appendChild(v + "");
+							fieldElem.appendChild(valueElem);
+						}
+					} else {
+						Element valueElem = new Element("value");
+						valueElem.appendChild(value + "");
+						fieldElem.appendChild(valueElem);
+					}
+					ic.appendChild(fieldElem);
+				}
+			}
+		}
+	}
+
 	public static void handleResults(File output) {
 		Element root = new Element("results");
 		for (Result r : Results.getResults()) {
@@ -76,32 +105,11 @@ public class Main {
 				icc.addAttribute(new Attribute("class", declaringClass.getName()));
 
 				for (Map.Entry<Integer, Object> entry2 : entry.getValue().entrySet()) {
-					PropagationValue pv = (PropagationValue) entry2.getValue();
-					for (PathValue pathValue : pv.getPathValues()) {
-						Map<String, FieldValue> fieldMap = pathValue.getFieldMap();
-						for (String field : fieldMap.keySet()) {
-							Element fieldElem = new Element("field");
-							FieldValue fieldValue = fieldMap.get(field);
-							Object value = fieldValue.getValue();
-							fieldElem.addAttribute(new Attribute("name", field));
-							if (value != null) {
-								if (value instanceof Iterable) {
-									@SuppressWarnings("rawtypes")
-									Iterable iter = (Iterable) value;
-									for (Object v : iter) {
-										Element valueElem = new Element("value");
-										valueElem.appendChild(v + "");
-										fieldElem.appendChild(valueElem);
-									}
-								} else {
-									Element valueElem = new Element("value");
-									valueElem.appendChild(value + "");
-									fieldElem.appendChild(valueElem);
-								}
-								icc.appendChild(fieldElem);
-							}
-						}
-					}
+					Object value = entry2.getValue();
+					if (value instanceof PropagationValue) {
+						PropagationValue pv = (PropagationValue) value;
+						handlePropagationValue(pv, icc);
+					} 
 				}
 				root.appendChild(icc);
 			}

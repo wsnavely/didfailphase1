@@ -137,7 +137,8 @@ def get_epicc(tx):
         epicc = glo.epicc[tx_pkg][tx_id]
     except KeyError as e:
         if id(tx) not in get_epicc.missed:
-            get_epicc_and_filters.missed.add(id(tx))
+            #TODO get_epicc_and_filters disn't declared
+            #get_epicc_and_filters.missed.add(id(tx))
             sys.stderr.write("Missing epicc info for %s, intent_id='%s'\n" % (tx_pkg, tx_id))
         epicc = [{}]
     return epicc

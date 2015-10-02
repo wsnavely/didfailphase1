@@ -11,6 +11,7 @@ import logging
 import errno
 import json
 import os
+import re
 import sys
 import zipfile
 import axmlparserpy.axmlprinter as axmlprinter
@@ -61,7 +62,14 @@ def get_dare_options(conf):
         if "timeout" in options:
             dare_options.timeout = options["timeout"]
     return dare_options
-        
+
+def extract_intent_sink_id(ic):
+    for value in ic.findall("./field[@name='extras']/value"):
+        match = re.match("newField_([0-9]+)", value.text)
+        if match:
+            return match.groups()[0]
+    return None
+    
 def process_apk(path, outdir, fd_opt, ic_opt, dare_opt):
     logging.debug("Processing APK: " + path)
 
@@ -98,14 +106,22 @@ def process_apk(path, outdir, fd_opt, ic_opt, dare_opt):
     ic_root = ic_data.getroot()
     man_data = ET.parse(manifest)
     man_root = man_data.getroot()
-        
-    fd_root.tag = "fd_results"
-    ic_root.tag = "ic_results"
-    new_root = ET.Element("analysis_results")
-    new_root.attrib["apk"] = apk_name
-    new_root.append(fd_root)
-    new_root.append(ic_root)
-    man_root.append(new_root)
+    
+    intent_sinks = {}
+    for ic in ic_root.iter("ic"):
+        intent_id = extract_intent_sink_id(ic)
+        if intent_id:
+            intent_sinks[intent_id] = ic
+    
+    for intent_sink in fd_root.findall("./flow/sink[@is-intent='1']"):
+        intent_id = intent_sink.attrib["intent-id"]
+        if intent_id in intent_sinks:
+            for child in intent_sinks[intent_id]:
+                intent_sink.append(child)
+    
+    fd_root.tag = "analysis_results"
+    man_root.append(fd_root)
+    
     results = ET.tostring(man_root, encoding="utf-8")
     results_out = os.path.join(apk_outdir, apk_name + ".xml")
     with open(results_out, 'w') as outfile:
