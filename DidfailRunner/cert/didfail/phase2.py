@@ -19,6 +19,7 @@ from collections import OrderedDict
 import re
 import pdb
 from cert.didfail.parse_epicc import parse_epicc, BCAST_ID
+from __builtin__ import None
 
 stop = pdb.set_trace
 
@@ -27,11 +28,44 @@ class ComponentType(object):
     Service = "Service"
     BroadcastReceiver = "BroadcastReceiver"
     ContentProvider = "ContentProvider"
+    
+class EndpointType(object):
+    Sending = "Sending"
+    Receiving = "Receiving"
+    
+class Node(object):
+    def __init__(self):
+        self.package = None
+        self.component = None
 
-Flow = namedtuple('Flow', ['src', 'app', 'sink'])
-Intent = namedtuple('Intent', ['tx', 'rx', 'intent_id'])
+class Endpoint(object):
+    def __init__(self):
+        self.type = None
+        self.node = None
+
+class IntentTerminal(object):
+    def __init__(self):
+        self.type = None
+        self.node = None
+    
+#Flow = namedtuple('Flow', ['src', 'app', 'sink'])
+class Flow(object):
+    def __init__(self):
+        #self.app = None
+        self.src = None
+        self.sink = None
+
+
+#Intent = namedtuple('Intent', ['tx', 'rx', 'intent_id'])
+class Intent(object):
+    def __init__(self):
+        self.src_pkg = None
+        self.dst_pkg = None
+        self.intent_id = None
+
 IntentResult = namedtuple('IntentResult', ['i'])
 android_pfx = "{http://schemas.android.com/apk/res/android}"
+
 script_path = os.path.dirname(os.path.realpath(__file__))
 
 def die(text): 
@@ -659,11 +693,56 @@ def main():
             assert(0)
             return obj
         
+    
+def parse_flow(flow, pkg_name):    
+    sink = flow.find("sink")
+    result_sink = None
+    result_src = None
+    
+    if sink.attrib.get('is-intent') == "1":
+        intent_id = sink.attrib.get('intent-id')
+        if not intent_id: 
+            raise Exception("Intent ID Missing")
+        sink_component = sink.attrib.get('component')
         
+        result_sink = Intent(tx=(pkg_name, sink_component), rx=None, intent_id=intent_id)
+        rx_type = ComponentType.Activity
+        glo.rx_type_of[(pkg_name, intent_id)] = rx_type
+    elif sink.attrib.get('is-intent-result') == "1":
+        sink_component = sink.get('component')
+        if glo.discard_tx_comp_name:
+            sink_component = None
+        result_sink = IntentResult(Intent(tx=None, rx=(pkg_name, sink_component), intent_id=None))
+    else:
+        result_sink = "Sink: " + sink.attrib['method']
+        
+    for src in flow.findall("source"):
+        src_method = src.attrib['method']
+        component = None
+        if src_method.startswith("<android.content.Intent:") or ("getIntent" in src_method):
+            component = src.attrib.get('component')
+            if glo.discard_tx_comp_name:
+                component = None
+            result_src = Intent(tx=None, rx=(pkg_name, component), intent_id=None)
+        elif ("@parameter2: android.content.Intent" in src_method): 
+            # FIXME: only for "android.app.Activity: void onActivityResult" 
+            component = src.attrib['component']
+            if glo.discard_tx_comp_name:
+                component = None
+            result_src = IntentResult(Intent(tx=(pkg_name, component), rx=None, intent_id=None))
+        else:
+            result_src = "Src: " + src_method 
+        
+        # FIXME: What if the the source and sinks are in different components?
+        if glo.only_intents and all(type(s) == str for s in [result_src, result_sink]):
+            continue
+        flows.append(Flow(src=result_src, app=pkg_name, sink=result_sink))
+    
 def find_flows(root):
     pkg_name = root.attrib['package']
     analysis_results = root.find("analysis_results")   
     flows = []
+    
     for flow in analysis_results.findall("flow"):
         sink = flow.find("sink")
         result_sink = None
