@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<results>
+    <ic unit="r13 = virtualinvoke r1.&lt;android.os.Bundle:
+    java.lang.String getString(java.lang.String)&gt;(r12)"
+    method="void getDataFromIntent()" class="org.cert.echoer.MainActivity"/>
+</results>

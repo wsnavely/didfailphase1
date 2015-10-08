@@ -1,0 +1,2 @@
+dummyMainClass
+org.cert.echoer.MainActivity

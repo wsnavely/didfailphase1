@@ -1,0 +1,122 @@
+<manifest xmlns:ns0="http://schemas.android.com/apk/res/android"
+	package="org.cert.sendsms" ns0:versionCode="1" ns0:versionName="1.0">
+	<uses-sdk ns0:minSdkVersion="8" ns0:targetSdkVersion="16">
+	</uses-sdk>
+	<uses-permission ns0:name="android.permission.READ_PHONE_STATE">
+	</uses-permission>
+	<uses-permission ns0:name="android.permission.SEND_SMS">
+	</uses-permission>
+	<application ns0:allowBackup="true" ns0:icon="@7F020000"
+		ns0:label="@7F050000" ns0:theme="@7F060001">
+		<activity ns0:label="@7F050000" ns0:name="org.cert.sendsms.MainActivity">
+			<intent-filter>
+				<action ns0:name="android.intent.action.MAIN">
+				</action>
+				<category ns0:name="android.intent.category.LAUNCHER">
+				</category>
+			</intent-filter>
+		</activity>
+	</application>
+	<analysis_results>
+		<flow>
+			<sink
+				method="&lt;android.app.Activity: void onCreate(android.os.Bundle)&gt;" />
+			<source component="org.cert.sendsms.MainActivity" in="onCreate"
+				method="Stmt($r1 := @parameter0: android.os.Bundle)" />
+		</flow>
+		<flow>
+			<sink component="org.cert.sendsms.MainActivity" intent-id="1"
+				is-intent="1"
+				method="&lt;android.app.Activity: void startActivityForResult(android.content.Intent,int)&gt;">
+				<field name="dataType">
+					<value>text/plain</value>
+				</field>
+				<field name="action">
+					<value>android.intent.action.SEND</value>
+				</field>
+				<field name="extras">
+					<value>newField_1</value>
+					<value>secret</value>
+				</field>
+			</sink>
+			<source in="onClick"
+				method="&lt;android.app.Activity: java.lang.Object         getSystemService(java.lang.String)&gt;" />
+			<source in="onClick"
+				method="&lt;android.telephony.TelephonyManager:         java.lang.String getDeviceId()&gt;" />
+		</flow>
+		<flow>
+			<sink
+				method="&lt;android.content.Intent: android.content.Intent         putExtra(java.lang.String,java.lang.String)&gt;" />
+			<source in="onClick"
+				method="&lt;android.app.Activity: java.lang.Object         getSystemService(java.lang.String)&gt;" />
+			<source in="onClick"
+				method="&lt;android.telephony.TelephonyManager:         java.lang.String getDeviceId()&gt;" />
+		</flow>
+		<flow>
+			<sink
+				method="&lt;android.telephony.SmsManager:         void sendTextMessage(java.lang.String,java.lang.String,java.lang.String,android.app.PendingIntent,android.app.PendingIntent)&gt;" />
+			<source in="onActivityResult"
+				method="&lt;android.content.Intent: android.os.Bundle         getExtras()&gt;" />
+			<source in="onActivityResult"
+				method="&lt;android.content.Intent: android.os.Bundle         getExtras()&gt;" />
+			<source in="onActivityResult"
+				method="&lt;android.os.Bundle: java.lang.String         getString(java.lang.String)&gt;" />
+			<source in="onActivityResult"
+				method="&lt;android.os.Bundle: java.lang.String         getString(java.lang.String)&gt;" />
+			<source in="sendSMSMessage"
+				method="&lt;android.telephony.SmsManager:         android.telephony.SmsManager getDefault()&gt;" />
+			<source component="org.cert.sendsms.MainActivity" in="onActivityResult"
+				method="Stmt($i0 := @parameter0: int)" />
+			<source component="org.cert.sendsms.MainActivity" in="onActivityResult"
+				method="Stmt($i1 := @parameter1: int)" />
+			<source component="org.cert.sendsms.MainActivity" in="onActivityResult"
+				method="Stmt($r1 := @parameter2: android.content.Intent)" />
+		</flow>
+		<flow>
+			<sink
+				method="&lt;android.util.Log: int i(java.lang.String,java.lang.String)&gt;" />
+			<source in="onClick"
+				method="&lt;android.app.Activity: java.lang.Object         getSystemService(java.lang.String)&gt;" />
+			<source in="onClick"
+				method="&lt;android.telephony.TelephonyManager:         java.lang.String getDeviceId()&gt;" />
+		</flow>
+		<flow>
+			<sink
+				method="&lt;android.util.Log: int i(java.lang.String,java.lang.String)&gt;" />
+			<source in="onActivityResult"
+				method="&lt;android.content.Intent: android.os.Bundle         getExtras()&gt;" />
+			<source in="onActivityResult"
+				method="&lt;android.os.Bundle: java.lang.String         getString(java.lang.String)&gt;" />
+			<source component="org.cert.sendsms.MainActivity" in="onActivityResult"
+				method="Stmt($i0 := @parameter0: int)" />
+			<source component="org.cert.sendsms.MainActivity" in="onActivityResult"
+				method="Stmt($i1 := @parameter1: int)" />
+			<source component="org.cert.sendsms.MainActivity" in="onActivityResult"
+				method="Stmt($r1 := @parameter2: android.content.Intent)" />
+		</flow>
+		<flow>
+			<sink
+				method="&lt;android.util.Log: int i(java.lang.String,java.lang.String)&gt;" />
+			<source component="org.cert.sendsms.MainActivity" in="onActivityResult"
+				method="Stmt($i0 := @parameter0: int)" />
+			<source component="org.cert.sendsms.MainActivity" in="onActivityResult"
+				method="Stmt($i1 := @parameter1: int)" />
+			<source component="org.cert.sendsms.MainActivity" in="onActivityResult"
+				method="Stmt($r1 := @parameter2: android.content.Intent)" />
+		</flow>
+		<flow>
+			<sink
+				method="&lt;android.util.Log: int v(java.lang.String,java.lang.String)&gt;" />
+			<source in="onActivityResult"
+				method="&lt;android.content.Intent: android.os.Bundle         getExtras()&gt;" />
+			<source in="onActivityResult"
+				method="&lt;android.os.Bundle: java.lang.String         getString(java.lang.String)&gt;" />
+			<source component="org.cert.sendsms.MainActivity" in="onActivityResult"
+				method="Stmt($i0 := @parameter0: int)" />
+			<source component="org.cert.sendsms.MainActivity" in="onActivityResult"
+				method="Stmt($i1 := @parameter1: int)" />
+			<source component="org.cert.sendsms.MainActivity" in="onActivityResult"
+				method="Stmt($r1 := @parameter2: android.content.Intent)" />
+		</flow>
+	</analysis_results>
+</manifest>

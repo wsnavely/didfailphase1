@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<results>
+    <ic unit="virtualinvoke r22.&lt;org.cert.sendsms.MainActivity:
+    void startActivityForResult(android.content.Intent,int)&gt;(r2,
+    b0)" method="void onClick(android.view.View)" class="org.cert.sendsms.Button1Listener">
+        <field name="dataType">
+            <value>text/plain</value>
+        </field>
+        <field name="action">
+            <value>android.intent.action.SEND</value>
+        </field>
+        <field name="extras">
+            <value>newField_1</value>
+            <value>secret</value>
+        </field>
+    </ic>
+    <ic unit="r10 = virtualinvoke r8.&lt;android.os.Bundle:
+    java.lang.String getString(java.lang.String)&gt;(r9)"
+    method="void onActivityResult(int,int,android.content.Intent)"
+    class="org.cert.sendsms.MainActivity"/>
+    <ic unit="r5 = virtualinvoke r3.&lt;android.os.Bundle:
+    java.lang.String getString(java.lang.String)&gt;(r4)"
+    method="void onActivityResult(int,int,android.content.Intent)"
+    class="org.cert.sendsms.MainActivity"/>
+</results>

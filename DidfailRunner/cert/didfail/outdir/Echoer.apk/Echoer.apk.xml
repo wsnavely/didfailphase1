@@ -1,0 +1,44 @@
+<manifest xmlns:ns0="http://schemas.android.com/apk/res/android" package="org.cert.echoer" ns0:versionCode="1" ns0:versionName="1.0">
+<uses-sdk ns0:minSdkVersion="8" ns0:targetSdkVersion="16">
+</uses-sdk>
+<application ns0:allowBackup="true" ns0:icon="@7F020000" ns0:label="@7F050000" ns0:theme="@7F060001">
+<activity ns0:label="@7F050000" ns0:name="org.cert.echoer.MainActivity">
+<intent-filter>
+<action ns0:name="android.intent.action.SEND">
+</action>
+<category ns0:name="android.intent.category.DEFAULT">
+</category>
+<data ns0:mimeType="text/plain">
+</data>
+</intent-filter>
+</activity>
+<activity-alias ns0:label="MainActivity_VIEW" ns0:name="MainActivity_Alias" ns0:targetActivity="org.cert.echoer.MainActivity">
+<intent-filter>
+<action ns0:name="android.intent.action.VIEW">
+</action>
+<category ns0:name="android.intent.category.DEFAULT">
+</category>
+<data ns0:scheme="http">
+</data>
+</intent-filter>
+</activity-alias>
+</application>
+<analysis_results>
+    <flow>
+        <sink method="&lt;android.app.Activity: void onCreate(android.os.Bundle)&gt;" />
+        <source component="org.cert.echoer.MainActivity" in="onCreate" method="Stmt($r1 := @parameter0: android.os.Bundle)" />
+    </flow>
+    <flow>
+        <sink method="&lt;android.util.Log: int i(java.lang.String,java.lang.String)&gt;" />
+        <source component="org.cert.echoer.MainActivity" in="getDataFromIntent" method="&lt;android.app.Activity: android.content.Intent         getIntent()&gt;" />
+        <source in="getDataFromIntent" method="&lt;android.content.Intent: android.net.Uri         getData()&gt;" />
+        <source in="getDataFromIntent" method="&lt;android.content.Intent: java.lang.String         getAction()&gt;" />
+    </flow>
+    <flow>
+        <sink method="&lt;android.util.Log: int i(java.lang.String,java.lang.String)&gt;" />
+        <source component="org.cert.echoer.MainActivity" in="getDataFromIntent" method="&lt;android.app.Activity: android.content.Intent         getIntent()&gt;" />
+        <source in="getDataFromIntent" method="&lt;android.content.Intent: android.os.Bundle         getExtras()&gt;" />
+        <source in="getDataFromIntent" method="&lt;android.content.Intent: java.lang.String         getAction()&gt;" />
+        <source in="getDataFromIntent" method="&lt;android.os.Bundle: java.lang.String         getString(java.lang.String)&gt;" />
+    </flow>
+</analysis_results></manifest>

@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<results>
+    <flow>
+        <sink method="&lt;android.app.Activity: void onCreate(android.os.Bundle)&gt;"/>
+        <source method="Stmt($r1 := @parameter0: android.os.Bundle)"
+        in="onCreate" component="org.cert.WriteFile.MainActivity"/>
+    </flow>
+    <flow>
+        <sink method="&lt;android.app.Activity: void startActivityForResult(android.content.Intent,int)&gt;"
+        is-intent="1" intent-id="1" component="org.cert.WriteFile.MainActivity"/>
+        <source method="&lt;android.app.Activity: java.lang.Object
+        getSystemService(java.lang.String)&gt;" in="getMyLocation"/>
+        <source method="&lt;android.location.Location:
+        double getLatitude()&gt;" in="getMyLocation"/>
+        <source method="&lt;android.location.Location:
+        double getLongitude()&gt;" in="getMyLocation"/>
+        <source method="&lt;android.location.LocationManager:
+        android.location.Location getLastKnownLocation(java.lang.String)&gt;"
+        in="getMyLocation"/>
+    </flow>
+    <flow>
+        <sink method="&lt;android.content.ContextWrapper:
+        java.io.FileOutputStream openFileOutput(java.lang.String,int)&gt;"/>
+        <source method="&lt;android.content.Intent: android.os.Bundle
+        getExtras()&gt;" in="onActivityResult"/>
+        <source method="&lt;android.os.Bundle: java.lang.String
+        getString(java.lang.String)&gt;" in="onActivityResult"/>
+        <source method="Stmt($i0 := @parameter0: int)"
+        in="onActivityResult" component="org.cert.WriteFile.MainActivity"/>
+        <source method="Stmt($i1 := @parameter1: int)"
+        in="onActivityResult" component="org.cert.WriteFile.MainActivity"/>
+        <source method="Stmt($r1 := @parameter2: android.content.Intent)"
+        in="onActivityResult" component="org.cert.WriteFile.MainActivity"/>
+    </flow>
+    <flow>
+        <sink method="&lt;android.content.Intent: android.content.Intent
+        putExtra(java.lang.String,java.lang.String)&gt;"/>
+        <source method="&lt;android.app.Activity: java.lang.Object
+        getSystemService(java.lang.String)&gt;" in="getMyLocation"/>
+        <source method="&lt;android.location.Location:
+        double getLatitude()&gt;" in="getMyLocation"/>
+        <source method="&lt;android.location.Location:
+        double getLongitude()&gt;" in="getMyLocation"/>
+        <source method="&lt;android.location.LocationManager:
+        android.location.Location getLastKnownLocation(java.lang.String)&gt;"
+        in="getMyLocation"/>
+    </flow>
+    <flow>
+        <sink method="&lt;android.util.Log: int i(java.lang.String,java.lang.String)&gt;"/>
+        <source method="Stmt($i0 := @parameter0: int)"
+        in="onActivityResult" component="org.cert.WriteFile.MainActivity"/>
+        <source method="Stmt($i1 := @parameter1: int)"
+        in="onActivityResult" component="org.cert.WriteFile.MainActivity"/>
+        <source method="Stmt($r1 := @parameter2: android.content.Intent)"
+        in="onActivityResult" component="org.cert.WriteFile.MainActivity"/>
+    </flow>
+    <flow>
+        <sink method="&lt;android.util.Log: int i(java.lang.String,java.lang.String)&gt;"/>
+        <source method="&lt;android.content.Intent: android.os.Bundle
+        getExtras()&gt;" in="onActivityResult"/>
+        <source method="&lt;android.content.Intent: android.os.Bundle
+        getExtras()&gt;" in="onActivityResult"/>
+        <source method="&lt;android.os.Bundle: java.lang.String
+        getString(java.lang.String)&gt;" in="onActivityResult"/>
+        <source method="&lt;android.os.Bundle: java.lang.String
+        getString(java.lang.String)&gt;" in="onActivityResult"/>
+        <source method="Stmt($i0 := @parameter0: int)"
+        in="onActivityResult" component="org.cert.WriteFile.MainActivity"/>
+        <source method="Stmt($i1 := @parameter1: int)"
+        in="onActivityResult" component="org.cert.WriteFile.MainActivity"/>
+        <source method="Stmt($r1 := @parameter2: android.content.Intent)"
+        in="onActivityResult" component="org.cert.WriteFile.MainActivity"/>
+    </flow>
+    <flow>
+        <sink method="&lt;android.util.Log: int i(java.lang.String,java.lang.String)&gt;"/>
+        <source method="&lt;android.content.Intent: android.os.Bundle
+        getExtras()&gt;" in="onActivityResult"/>
+        <source method="&lt;android.os.Bundle: java.lang.String
+        getString(java.lang.String)&gt;" in="onActivityResult"/>
+        <source method="Stmt($i0 := @parameter0: int)"
+        in="onActivityResult" component="org.cert.WriteFile.MainActivity"/>
+        <source method="Stmt($i1 := @parameter1: int)"
+        in="onActivityResult" component="org.cert.WriteFile.MainActivity"/>
+        <source method="Stmt($r1 := @parameter2: android.content.Intent)"
+        in="onActivityResult" component="org.cert.WriteFile.MainActivity"/>
+    </flow>
+    <flow>
+        <sink method="&lt;android.util.Log: int i(java.lang.String,java.lang.String)&gt;"/>
+        <source method="&lt;android.app.Activity: java.lang.Object
+        getSystemService(java.lang.String)&gt;" in="getMyLocation"/>
+        <source method="&lt;android.location.Location:
+        double getLatitude()&gt;" in="getMyLocation"/>
+        <source method="&lt;android.location.Location:
+        double getLongitude()&gt;" in="getMyLocation"/>
+        <source method="&lt;android.location.LocationManager:
+        android.location.Location getLastKnownLocation(java.lang.String)&gt;"
+        in="getMyLocation"/>
+    </flow>
+</results>

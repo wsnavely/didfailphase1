@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<results>
+    <flow>
+        <sink method="&lt;android.app.Activity: void onCreate(android.os.Bundle)&gt;"/>
+        <source method="Stmt($r1 := @parameter0: android.os.Bundle)"
+        in="onCreate" component="org.cert.echoer.MainActivity"/>
+    </flow>
+    <flow>
+        <sink method="&lt;android.util.Log: int i(java.lang.String,java.lang.String)&gt;"/>
+        <source method="&lt;android.app.Activity: android.content.Intent
+        getIntent()&gt;" in="getDataFromIntent" component="org.cert.echoer.MainActivity"/>
+        <source method="&lt;android.content.Intent: android.net.Uri
+        getData()&gt;" in="getDataFromIntent"/>
+        <source method="&lt;android.content.Intent: java.lang.String
+        getAction()&gt;" in="getDataFromIntent"/>
+    </flow>
+    <flow>
+        <sink method="&lt;android.util.Log: int i(java.lang.String,java.lang.String)&gt;"/>
+        <source method="&lt;android.app.Activity: android.content.Intent
+        getIntent()&gt;" in="getDataFromIntent" component="org.cert.echoer.MainActivity"/>
+        <source method="&lt;android.content.Intent: android.os.Bundle
+        getExtras()&gt;" in="getDataFromIntent"/>
+        <source method="&lt;android.content.Intent: java.lang.String
+        getAction()&gt;" in="getDataFromIntent"/>
+        <source method="&lt;android.os.Bundle: java.lang.String
+        getString(java.lang.String)&gt;" in="getDataFromIntent"/>
+    </flow>
+</results>
