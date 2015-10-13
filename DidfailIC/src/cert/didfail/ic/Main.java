@@ -64,6 +64,7 @@ public class Main {
 
 	public static void handlePropagationValue(PropagationValue pv, Element ic) {
 		for (PathValue pathValue : pv.getPathValues()) {
+			Element pvElement = new Element("pv");
 			Map<String, FieldValue> fieldMap = pathValue.getFieldMap();
 			for (String field : fieldMap.keySet()) {
 				Element fieldElem = new Element("field");
@@ -84,9 +85,10 @@ public class Main {
 						valueElem.appendChild(value + "");
 						fieldElem.appendChild(valueElem);
 					}
-					ic.appendChild(fieldElem);
+					pvElement.appendChild(fieldElem);
 				}
 			}
+			ic.appendChild(pvElement);
 		}
 	}
 
@@ -106,6 +108,7 @@ public class Main {
 
 				for (Map.Entry<Integer, Object> entry2 : entry.getValue().entrySet()) {
 					Object value = entry2.getValue();
+					
 					if (value instanceof PropagationValue) {
 						PropagationValue pv = (PropagationValue) value;
 						handlePropagationValue(pv, icc);
