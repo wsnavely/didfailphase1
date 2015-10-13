@@ -16,11 +16,11 @@ import sys
 import zipfile
 import axmlparserpy.axmlprinter as axmlprinter
 import xml.dom.minidom
+import collections
 
 from cert.didfail.flowdroid import run_flowdroid, FlowdroidOptions
 from cert.didfail.interapp import ICOptions, run_ic
 from cert.didfail.retarget import DareOptions, run_dare
-import command
 
 def mkdir_p(path):
     try:
@@ -107,11 +107,12 @@ def process_apk(path, outdir, fd_opt, ic_opt, dare_opt):
     man_data = ET.parse(manifest)
     man_root = man_data.getroot()
     
-    intent_sinks = {}
+    intent_sinks = collections.defaultdict(list)
     for ic in ic_root.iter("ic"):
-        intent_id = extract_intent_sink_id(ic)
-        if intent_id:
-            intent_sinks[intent_id] = ic
+        for pv in ic_root.iter("pv"):
+            intent_id = extract_intent_sink_id(pv)
+            if intent_id:
+                intent_sinks[intent_id].append(pv)
     
     for intent_sink in fd_root.findall("./flow/sink[@is-intent='1']"):
         intent_id = intent_sink.attrib["intent-id"]
@@ -133,8 +134,6 @@ def main(argv=None):
     else:
         sys.argv.extend(argv)
         
-    command.__whatif__ = True
-
     program_shortdesc = __import__('__main__').__doc__.split("\n")[1]
 
     try:
