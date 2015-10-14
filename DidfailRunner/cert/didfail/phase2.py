@@ -4,21 +4,19 @@
 cert.didfail.phase2 -- Runs the second phase of the Didfail analysis.
 '''
 
+from __builtin__ import classmethod
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
-import xml.etree.ElementTree as ET
-import logging
-import json
-import os
-import re
-import sys
-from __builtin__ import classmethod
-import collections
 from collections import OrderedDict
 from collections import namedtuple
+import logging
+import sys
+
+from cert.didfail import OrderedSet
+import xml.etree.ElementTree as ET
+
 
 # Model
-
 ANDROID_PFX = "{http://schemas.android.com/apk/res/android}"
     
 ComponentId = namedtuple('ComponentId', ['package', 'name'])
@@ -103,9 +101,25 @@ class Component(object):
             yield result
             
     def __str__(self, *args, **kwargs):
-        fmt = '"component":{{"package":{0}, "name":{1}, "filters":{2}}}'
+        fmt = '"Component(package={0}, name={1}, filters={2})'
         filter_strs = [str(f) for f in self.filters]
         return fmt.format(self.cid.package, self.cid.name, str(filter_strs))
+    
+class GenericSource(object):
+    def __init__(self, src):
+        self.src = src
+    
+    def __str__(self, *args, **kwargs):
+        fmt = "GenericSource({0})"
+        return fmt.format(self.src)
+
+class GenericSink(object):
+    def __init__(self, sink):
+        self.sink = sink
+    
+    def __str__(self, *args, **kwargs):
+        fmt = "GenericSink({0})"
+        return fmt.format(self.sink)
 
 class Intent(object):
     def __init__(self):
@@ -140,7 +154,7 @@ class Intent(object):
         return intent
         
     def __str__(self, *args, **kwargs):
-        fmt = '{{"intent":{{"id":"{0}", "rx":"{1}", "tx":"{2}", "icc":"{3}"}}}}'
+        fmt = '"Intent(id={0}, rx={1}, tx={2}, icc={3})'
         return fmt.format(self.intent_id, str(self.rx), str(self.tx), str(self.icc))
  
 class IntentResult(object):
@@ -170,7 +184,8 @@ class IntentResult(object):
         return intent_result
     
     def __str__(self, *args, **kwargs):
-        return '"{{intent_result":{{"i":"{0}""}}}}'.format(str(self.i))
+        fmt = 'IntentResul(i={0})'
+        return fmt.format(str(self.i))
 
 class IntentFilter(object):    
     def __init__(self, action=None, category=None, mime_type=None):
@@ -203,7 +218,7 @@ class IntentFilter(object):
         return intent_filter
         
     def __str__(self):
-        fmt = '{{"intent-filter":{{"action"={0}, "category"={1}, mime_type={2}}}}}'
+        fmt = 'IntentFilter(action={0}, category={1}, mime_type={2})'
         return fmt.format(self.action, self.category, self.mime_type)
 
 class Flow(object):
@@ -211,6 +226,7 @@ class Flow(object):
         self.src = None
         self.sink = None
         self.app = None
+        self.is_complete = False
             
     @classmethod
     def from_flow_xml(cls, flow_root, package):
@@ -224,7 +240,7 @@ class Flow(object):
         elif sink_data.attrib.get('is-intent-result') == "1":
             sink = IntentResult.from_sink_xml(sink_data, package)
         else:
-            sink = "Sink: " + sink_method
+            sink = GenericSink(sink_method)
         
         for src_data in flow_root.findall("source"):
             src_method = src_data.attrib['method']
@@ -242,7 +258,7 @@ class Flow(object):
             elif ("@parameter1: android.content.Intent" in src_method) and (in_meth == "onReceive"):
                 src = Intent.from_src_xml(src_data, package)
             else:
-                src = "Src: " + src_method
+                src = GenericSource(src_method)
             
             result_flow = cls()
             result_flow.src = src
@@ -251,30 +267,50 @@ class Flow(object):
             yield result_flow        
 
     def __str__(self, *args, **kwargs):
-        return '{{"flow":{{"app":"{0}", "src":"{1}", "sink":"{2}"}}}}'.format(self.app, str(self.src), str(self.sink))   
+        fmt = 'Flow(app={0}, src={1}, sink={2}, complete={3})'
+        return fmt.format(self.app, str(self.src), str(self.sink), self.is_complete)   
+
+class AppInfo(object):
+    def __init__(self, package):
+        self.package = package
+        self.flows = []
+        self.components = {}
        
 class Phase2Analysis(object):
     def __init__(self):
-        self.flows = {}
-        self.components = {}
+        self.appinfo = {}
             
     def add_manifest_file(self, manifest):
         logging.debug("Processing manifest: " + manifest)
         tree = ET.parse(manifest)
         manifest_root = tree.getroot()
-        package = manifest_root.attrib.get("package")
-        self.flows[package] = []
-        self.components[package] = []
         
+        package = manifest_root.attrib.get("package")        
         analysis_results = manifest_root.find("analysis_results")
      
+        info = AppInfo(package)
+     
+        # Process components
         for component in Component.from_manifest_xml(manifest_root):
-            print component
+            info.components[component.cid] = component
              
         # Process flows
         for flow_data in analysis_results.findall("flow"):
             for flow in Flow.from_flow_xml(flow_data, package):
-                self.flows[package].append(flow)
+                info.flows.append(flow)
+                print flow
+    
+    def get_sources(self):
+        pass
+    
+    def match_flows(self):
+        pass
+    
+    def solve_flows(self):
+        pass
+
+    def run_analysis(self):
+        pass
             
 def main(argv=None):
     if argv is None:
