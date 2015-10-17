@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<results>
+    <ic unit="virtualinvoke r24.&lt;com.example.osboxes.test1.MainActivity:
+    void startActivityForResult(android.content.Intent,int)&gt;(r15,
+    b1)" method="void onCreate(android.os.Bundle)" class="com.example.osboxes.test1.MainActivity">
+        <pv>
+            <field name="dataType">
+                <value>text/plain</value>
+            </field>
+            <field name="action">
+                <value>android.intent.action.ASSIST</value>
+            </field>
+            <field name="extras">
+                <value>newField_1</value>
+                <value>secret</value>
+            </field>
+        </pv>
+        <pv>
+            <field name="dataType">
+                <value>text/plain</value>
+            </field>
+            <field name="action">
+                <value>android.intent.action.SEND</value>
+            </field>
+            <field name="extras">
+                <value>newField_1</value>
+                <value>secret</value>
+            </field>
+        </pv>
+    </ic>
+    <ic unit="virtualinvoke r29.&lt;com.example.osboxes.test1.MainActivity:
+    android.content.ComponentName startService(android.content.Intent)&gt;(r25)"
+    method="void onCreate(android.os.Bundle)" class="com.example.osboxes.test1.MainActivity">
+        <pv>
+            <field name="package">
+                <value>com.example.osboxes.test1</value>
+            </field>
+            <field name="clazz">
+                <value>java/lang/String</value>
+            </field>
+            <field name="uri">
+                <value>string</value>
+            </field>
+        </pv>
+    </ic>
+</results>

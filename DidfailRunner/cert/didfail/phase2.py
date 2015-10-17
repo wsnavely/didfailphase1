@@ -15,20 +15,28 @@ import sys
 from cert.didfail import OrderedSet
 import xml.etree.ElementTree as ET
 
+# TODO Verification methods
+# Ensure sane inputs!
 
 # Model
 ANDROID_PFX = "{http://schemas.android.com/apk/res/android}"
     
 ComponentId = namedtuple('ComponentId', ['package', 'name'])
 
+class AppInfo(object):
+    def __init__(self, package):
+        self.package = package
+        self.flows = []
+        self.components = {}
+        
 class ComponentType(object):
     Activity = "Activity"
     Service = "Service"
     BroadcastReceiver = "BroadcastReceiver"
     ContentProvider = "ContentProvider"
     
-    @classmethod
-    def from_sink_method_name(cls, method_name):
+    @staticmethod
+    def get_receiving_component_type(method_name):
         result = None
         if "startActivity" in method_name:
             result = ComponentType.Activity
@@ -104,88 +112,6 @@ class Component(object):
         fmt = '"Component(package={0}, name={1}, filters={2})'
         filter_strs = [str(f) for f in self.filters]
         return fmt.format(self.cid.package, self.cid.name, str(filter_strs))
-    
-class GenericSource(object):
-    def __init__(self, src):
-        self.src = src
-    
-    def __str__(self, *args, **kwargs):
-        fmt = "GenericSource({0})"
-        return fmt.format(self.src)
-
-class GenericSink(object):
-    def __init__(self, sink):
-        self.sink = sink
-    
-    def __str__(self, *args, **kwargs):
-        fmt = "GenericSink({0})"
-        return fmt.format(self.sink)
-
-class Intent(object):
-    def __init__(self):
-        self.tx = None
-        self.rx = None
-        self.intent_id = None
-        self.icc = []
-    
-    @classmethod
-    def from_sink_xml(cls, sink_root, package):
-        comp = sink_root.attrib.get('component')
-        iid = sink_root.attrib.get('intent-id')
-        intent = cls()
-        intent.intent_id = iid
-        intent.tx = ComponentId(package, comp)
-        intent.rx = None
-        for pv in sink_root.findall("pv"):
-            pv_dict = {}
-            for field in pv.findall("field"):
-                name = field.attrib.get("name")
-                values = [v.text for v in field.findall("value")]
-                pv_dict[name] = values
-            intent.icc.append(pv_dict)
-        return intent
-        
-    @classmethod
-    def from_src_xml(cls, src_root, package):
-        comp = src_root.attrib.get('component')
-        intent = cls()
-        intent.tx = None
-        intent.rx = ComponentId(package, comp)
-        return intent
-        
-    def __str__(self, *args, **kwargs):
-        fmt = '"Intent(id={0}, rx={1}, tx={2}, icc={3})'
-        return fmt.format(self.intent_id, str(self.rx), str(self.tx), str(self.icc))
- 
-class IntentResult(object):
-    def __init__(self):
-        self.i = None
-    
-    @classmethod
-    def from_sink_xml(cls, sink_root, package):
-        comp = sink_root.attrib.get('component')
-        intent_result = cls()
-        intent = Intent()
-        intent.intent_id = None
-        intent.tx = None
-        intent.rx = ComponentId(package, comp)
-        intent_result.i = intent
-        return intent_result
-    
-    @classmethod
-    def from_src_xml(cls, src_root, package):
-        comp = src_root.attrib.get('component')
-        intent_result = cls()
-        intent = Intent()
-        intent.intent_id = None
-        intent.tx = ComponentId(package, comp)
-        intent.rx = None
-        intent_result.i = intent
-        return intent_result
-    
-    def __str__(self, *args, **kwargs):
-        fmt = 'IntentResul(i={0})'
-        return fmt.format(str(self.i))
 
 class IntentFilter(object):    
     def __init__(self, action=None, category=None, mime_type=None):
@@ -220,6 +146,186 @@ class IntentFilter(object):
     def __str__(self):
         fmt = 'IntentFilter(action={0}, category={1}, mime_type={2})'
         return fmt.format(self.action, self.category, self.mime_type)
+    
+class GenericSource(object):
+    def __init__(self, src):
+        self.src = src
+    
+    def __str__(self, *args, **kwargs):
+        fmt = "GenericSource({0})"
+        return fmt.format(self.src)
+
+class GenericSink(object):
+    def __init__(self, sink):
+        self.sink = sink
+    
+    def __str__(self, *args, **kwargs):
+        fmt = "GenericSink({0})"
+        return fmt.format(self.sink)
+
+class TransmittingIntentInfo():
+    def __init__(self):
+        self.info = {}
+    
+    @classmethod
+    def from_sink_xml(cls, sink_root, package):        
+        for pv in sink_root.findall("pv"):
+            tii = cls()
+            for field in pv.findall("field"):
+                name = field.attrib.get("name")
+                values = [v.text for v in field.findall("value")]
+                tii.info[name] = values
+            yield tii
+
+class Intent(object):
+    def __init__(self):
+        self.tx = None
+        self.rx = None
+        self.intent_id = None
+        self.icc = []
+    
+    @classmethod
+    def from_sink_xml(cls, sink_root, package):
+        comp = sink_root.attrib.get('component')
+        iid = sink_root.attrib.get('intent-id')
+        method_name = sink_root.attrib.get('method_name')
+        intent = cls()
+        intent.intent_id = iid
+        intent.tx = ComponentId(package, comp)
+        intent.rx = ComponentType.get_receiving_component_type(method_name)
+        intent.icc = list(TransmittingIntentInfo.from_sink_xml(sink_root))
+        return intent
+        
+    @classmethod
+    def from_src_xml(cls, src_root, package):
+        comp = src_root.attrib.get('component')
+        intent = cls()
+        intent.tx = None
+        intent.rx = ComponentId(package, comp)
+        return intent
+    
+    @staticmethod 
+    def matches(self, tx_intent, rx_intent, match_options):
+        #(tx_epicc, filters) = [get_epicc(tx), get_filters(rx)]
+        #(rx_pkg, rx_comp) = rx.rx
+    
+        #for intent in tx_epicc:
+        #    for filt in filters:
+        #        if match_intent_subcase(intent, filt, rx_comp):
+        #            return True
+        pass
+    
+    def match_intent_subcase(self, epicc, filt, rx_comp):
+        # This method implements the action, category, and data tests described in
+        # http://developer.android.com/guide/components/intents-filters.html#Resolution
+        # Epicc does not produce URI information, so we ignore the URI tests.
+        assert(isinstance(filt, IntentFilter))
+        if epicc.get('Top', None) == True:
+            return (not glo.unsound)
+        
+        def match_any_string(x):
+            return (x == '<any_string>') and not glo.unsound
+        
+        # Check if the intent is an explicit intent.
+        epicc_class = epicc.get('Class', None)
+        if epicc_class != None:
+            # Lots of false positives here for <any_string>.
+            # TODO: Can explicit intents be explicitly designated using an
+            # activity alias?  If so, we need to the use information in
+            # glo.act_alias_to_targ.
+            return ((epicc_class == rx_comp) or match_any_string(epicc_class))
+        # Action test
+        act = epicc.get('Action', None) or epicc.get('Actions', None)
+        if type(act) == str:
+            act_set = set([act])
+        elif (act is None):
+            act_set = set()
+        else:
+            act_set = set(act)
+        act_ok = (
+            (((act is None) or match_any_string(act)) and len(filt.action) > 0) or 
+            (act_set & set(filt.action)))
+        if not act_ok:
+            return False
+        ############################################################
+        # For each category in intent, must be a match in filter.
+        # Zero categories in intent, but many in filter: still can be received.
+        cat = epicc.get('Categories', None)
+        if type(cat) == str:
+            cat_set = set([cat])
+        elif (cat is None):
+            cat_set = set()
+        else:
+            cat_set = set(cat)
+        cat_ok = (
+            (cat == None) or any(match_any_string(x) for x in cat_set) or
+            ((cat_set & set(filt.category)) == cat_set))
+        if not cat_ok:
+            return False
+        # If glo.unsound, then False negatives returned if <any_string> is
+        # intent category EPICC returns and the filter actually matches that
+        # category EPICC doesn't process 
+    
+        ############################################################
+        # TODO: data MIME type
+        # An intent filter can declare zero or more data elements. Rules:
+        # 1. An intent that contains neither a URI nor a MIME type passes the test only if the filter does not specify any URIs or MIME types.
+        # (Can't test for this): 2. An intent that contains a URI but no MIME type (neither explicit nor inferable from the URI) passes the test only if its URI matches per test
+        # 3. An intent that contains a MIME type but not a URI passes the test only if the filter lists the same MIME type and does not specify a URI format.
+        # 4. (Can't test for last rule, since depends on URI)
+        # OUTPUT: com.UCMobile.intl.epicc:Actions: [action_local_share], Data types: [*/*]
+        # OUTPUT2: Uxpp.UC.epicc:Package: Uxpp/UC, Class: com/nate/android/nateon/uc3/msg/view/MsgListActivity, Extras: [RoomID, FileType, by, ShareUri, ShareType, ShareData, SearchWord, ShareText], Flags: 67108864
+    
+        #if False:
+        #    data = epicc.get('Type', None)
+        #    pdb.set_trace()
+        #    if type(data) == str:
+        #        data_set = set([data])
+        #    elif (data is None):
+        #        data_set = set()
+        #    else:
+        #        data_set = set(data)
+        #    data_ok = (
+        #        ((data == None) and len(filter.data)==0) or
+        #        ((data_set & set(filt.data)) == data_set))
+        #    if not data_ok:
+        #        return False
+    
+        return True
+               
+    def __str__(self, *args, **kwargs):
+        fmt = '"Intent(id={0}, rx={1}, tx={2}, icc={3})'
+        return fmt.format(self.intent_id, str(self.rx), str(self.tx), str(self.icc))
+ 
+class IntentResult(object):
+    def __init__(self):
+        self.i = None
+    
+    @classmethod
+    def from_sink_xml(cls, sink_root, package):
+        comp = sink_root.attrib.get('component')
+        intent_result = cls()
+        intent = Intent()
+        intent.intent_id = None
+        intent.tx = None
+        intent.rx = ComponentId(package, comp)
+        intent_result.i = intent
+        return intent_result
+    
+    @classmethod
+    def from_src_xml(cls, src_root, package):
+        comp = src_root.attrib.get('component')
+        intent_result = cls()
+        intent = Intent()
+        intent.intent_id = None
+        intent.tx = ComponentId(package, comp)
+        intent.rx = None
+        intent_result.i = intent
+        return intent_result
+    
+    def __str__(self, *args, **kwargs):
+        fmt = 'IntentResul(i={0})'
+        return fmt.format(str(self.i))
 
 class Flow(object):
     def __init__(self):
@@ -269,12 +375,6 @@ class Flow(object):
     def __str__(self, *args, **kwargs):
         fmt = 'Flow(app={0}, src={1}, sink={2}, complete={3})'
         return fmt.format(self.app, str(self.src), str(self.sink), self.is_complete)   
-
-class AppInfo(object):
-    def __init__(self, package):
-        self.package = package
-        self.flows = []
-        self.components = {}
        
 class Phase2Analysis(object):
     def __init__(self):
@@ -300,6 +400,30 @@ class Phase2Analysis(object):
                 info.flows.append(flow)
                 print flow
     
+    def get_flows(self):
+        for app in self.appinfo.values():
+            for flow in app.flows:
+                yield flow
+    
+    def get_components(self, ctype=None):
+        for app in self.appinfo.values():
+            for component in app.components.values():
+                if ctype and (component.ctype != ctype):
+                    continue
+                yield component     
+    
+    def generate_all_matches(self):   
+        for flow in self.get_flows().filter(lambda f: isinstance(f.sink, Intent)):
+            tx_intent = flow.sink
+            tx_meth_type = tx_intent.rx
+            
+            for rx_cmp in self.get_components(ctype=tx_meth_type):
+                rx_intent = Intent()
+                rx_intent.rx = rx_cmp.cid
+                
+                if self.match_intent_attr(tx_intent, rx_intent):
+                    yield Intent(tx=tx_intent.tx, rx=rx_intent.rx, intent_id=tx_intent.intent_id)
+
     def get_sources(self):
         pass
     

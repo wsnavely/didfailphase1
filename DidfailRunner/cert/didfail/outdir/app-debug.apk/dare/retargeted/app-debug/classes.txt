@@ -1,0 +1,6 @@
+com.example.osboxes.test1.MainActivity
+dummyMainClass
+com.example.osboxes.test1.MainActivity
+dummyMainClass
+com.example.osboxes.test1.MainActivity
+dummyMainClass

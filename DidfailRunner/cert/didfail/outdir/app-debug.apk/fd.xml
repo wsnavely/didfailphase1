@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<results>
+    <flow>
+        <sink method="&lt;android.app.Activity: void onCreate(android.os.Bundle)&gt;"/>
+        <source method="Stmt($r1 := @parameter0: android.os.Bundle)"
+        in="onCreate" component="com.example.osboxes.test1.MainActivity"/>
+    </flow>
+    <flow>
+        <sink method="&lt;android.app.Activity: void startActivityForResult(android.content.Intent,int)&gt;"
+        is-intent="1" intent-id="1" component="com.example.osboxes.test1.MainActivity"/>
+        <source method="&lt;android.app.Activity: java.lang.Object
+        getSystemService(java.lang.String)&gt;" in="onCreate"/>
+        <source method="&lt;android.telephony.TelephonyManager:
+        java.lang.String getDeviceId()&gt;" in="onCreate"/>
+    </flow>
+    <flow>
+        <sink method="&lt;android.content.Intent: android.content.Intent
+        putExtra(java.lang.String,java.lang.String)&gt;"/>
+        <source method="&lt;android.app.Activity: java.lang.Object
+        getSystemService(java.lang.String)&gt;" in="onCreate"/>
+        <source method="&lt;android.telephony.TelephonyManager:
+        java.lang.String getDeviceId()&gt;" in="onCreate"/>
+    </flow>
+</results>

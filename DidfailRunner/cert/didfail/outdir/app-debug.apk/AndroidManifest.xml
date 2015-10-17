@@ -1,0 +1,18 @@
+<?xml version="1.0" ?><manifest android:versionCode="1" android:versionName="1.0" package="com.example.osboxes.test1" platformBuildVersionCode="23" platformBuildVersionName="6.0-2166767" xmlns:android="http://schemas.android.com/apk/res/android">
+<uses-sdk android:minSdkVersion="15" android:targetSdkVersion="23">
+</uses-sdk>
+<application android:allowBackup="true" android:debuggable="true" android:icon="@7F030000" android:label="@7F060013" android:theme="@7F08007E">
+<activity android:label="@7F060013" android:name="com.example.osboxes.test1.MainActivity">
+<intent-filter>
+<action android:name="android.intent.action.MAIN">
+</action>
+<category android:name="android.intent.category.LAUNCHER">
+</category>
+</intent-filter>
+<intent-filter>
+<action android:name="android.intent.action.SEND">
+</action>
+</intent-filter>
+</activity>
+</application>
+</manifest>

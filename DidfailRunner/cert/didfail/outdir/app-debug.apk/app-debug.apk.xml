@@ -1,0 +1,81 @@
+<manifest xmlns:ns0="http://schemas.android.com/apk/res/android" package="com.example.osboxes.test1" platformBuildVersionCode="23" platformBuildVersionName="6.0-2166767" ns0:versionCode="1" ns0:versionName="1.0">
+<uses-sdk ns0:minSdkVersion="15" ns0:targetSdkVersion="23">
+</uses-sdk>
+<application ns0:allowBackup="true" ns0:debuggable="true" ns0:icon="@7F030000" ns0:label="@7F060013" ns0:theme="@7F08007E">
+<activity ns0:label="@7F060013" ns0:name="com.example.osboxes.test1.MainActivity">
+<intent-filter>
+<action ns0:name="android.intent.action.MAIN">
+</action>
+<category ns0:name="android.intent.category.LAUNCHER">
+</category>
+</intent-filter>
+<intent-filter>
+<action ns0:name="android.intent.action.SEND">
+</action>
+</intent-filter>
+</activity>
+</application>
+<analysis_results>
+    <flow>
+        <sink method="&lt;android.app.Activity: void onCreate(android.os.Bundle)&gt;" />
+        <source component="com.example.osboxes.test1.MainActivity" in="onCreate" method="Stmt($r1 := @parameter0: android.os.Bundle)" />
+    </flow>
+    <flow>
+        <sink component="com.example.osboxes.test1.MainActivity" intent-id="1" is-intent="1" method="&lt;android.app.Activity: void startActivityForResult(android.content.Intent,int)&gt;"><pv>
+            <field name="dataType">
+                <value>text/plain</value>
+            </field>
+            <field name="action">
+                <value>android.intent.action.ASSIST</value>
+            </field>
+            <field name="extras">
+                <value>newField_1</value>
+                <value>secret</value>
+            </field>
+        </pv>
+        <pv>
+            <field name="dataType">
+                <value>text/plain</value>
+            </field>
+            <field name="action">
+                <value>android.intent.action.SEND</value>
+            </field>
+            <field name="extras">
+                <value>newField_1</value>
+                <value>secret</value>
+            </field>
+        </pv>
+    <pv>
+            <field name="dataType">
+                <value>text/plain</value>
+            </field>
+            <field name="action">
+                <value>android.intent.action.ASSIST</value>
+            </field>
+            <field name="extras">
+                <value>newField_1</value>
+                <value>secret</value>
+            </field>
+        </pv>
+        <pv>
+            <field name="dataType">
+                <value>text/plain</value>
+            </field>
+            <field name="action">
+                <value>android.intent.action.SEND</value>
+            </field>
+            <field name="extras">
+                <value>newField_1</value>
+                <value>secret</value>
+            </field>
+        </pv>
+    </sink>
+        <source in="onCreate" method="&lt;android.app.Activity: java.lang.Object         getSystemService(java.lang.String)&gt;" />
+        <source in="onCreate" method="&lt;android.telephony.TelephonyManager:         java.lang.String getDeviceId()&gt;" />
+    </flow>
+    <flow>
+        <sink method="&lt;android.content.Intent: android.content.Intent         putExtra(java.lang.String,java.lang.String)&gt;" />
+        <source in="onCreate" method="&lt;android.app.Activity: java.lang.Object         getSystemService(java.lang.String)&gt;" />
+        <source in="onCreate" method="&lt;android.telephony.TelephonyManager:         java.lang.String getDeviceId()&gt;" />
+    </flow>
+</analysis_results></manifest>
