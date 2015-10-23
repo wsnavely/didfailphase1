@@ -7,16 +7,18 @@
     <ic unit="virtualinvoke r3.&lt;org.cert.WriteFile.MainActivity:
     void startActivityForResult(android.content.Intent,int)&gt;(r2,
     b0)" method="void onClick(android.view.View)" class="org.cert.WriteFile.Button1Listener">
-        <field name="dataType">
-            <value>text/plain</value>
-        </field>
-        <field name="action">
-            <value>android.intent.action.SEND</value>
-        </field>
-        <field name="extras">
-            <value>newField_1</value>
-            <value>secret</value>
-        </field>
+        <pv>
+            <field name="dataType">
+                <value>text/plain</value>
+            </field>
+            <field name="action">
+                <value>android.intent.action.SEND</value>
+            </field>
+            <field name="extras">
+                <value>newField_1</value>
+                <value>secret</value>
+            </field>
+        </pv>
     </ic>
     <ic unit="r14 = virtualinvoke r12.&lt;android.os.Bundle:
     java.lang.String getString(java.lang.String)&gt;(r13)"

@@ -1,2 +1,4 @@
 dummyMainClass
 org.cert.echoer.MainActivity
+dummyMainClass
+org.cert.echoer.MainActivity

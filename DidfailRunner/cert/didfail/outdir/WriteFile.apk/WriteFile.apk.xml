@@ -19,16 +19,42 @@
         <source component="org.cert.WriteFile.MainActivity" in="onCreate" method="Stmt($r1 := @parameter0: android.os.Bundle)" />
     </flow>
     <flow>
-        <sink component="org.cert.WriteFile.MainActivity" intent-id="1" is-intent="1" method="&lt;android.app.Activity: void startActivityForResult(android.content.Intent,int)&gt;"><field name="dataType">
-            <value>text/plain</value>
-        </field>
-        <field name="action">
-            <value>android.intent.action.SEND</value>
-        </field>
-        <field name="extras">
-            <value>newField_1</value>
-            <value>secret</value>
-        </field>
+        <sink component="org.cert.WriteFile.MainActivity" intent-id="1" is-intent="1" method="&lt;android.app.Activity: void startActivityForResult(android.content.Intent,int)&gt;"><pv>
+            <field name="dataType">
+                <value>text/plain</value>
+            </field>
+            <field name="action">
+                <value>android.intent.action.SEND</value>
+            </field>
+            <field name="extras">
+                <value>newField_1</value>
+                <value>secret</value>
+            </field>
+        </pv>
+    <pv>
+            <field name="dataType">
+                <value>text/plain</value>
+            </field>
+            <field name="action">
+                <value>android.intent.action.SEND</value>
+            </field>
+            <field name="extras">
+                <value>newField_1</value>
+                <value>secret</value>
+            </field>
+        </pv>
+    <pv>
+            <field name="dataType">
+                <value>text/plain</value>
+            </field>
+            <field name="action">
+                <value>android.intent.action.SEND</value>
+            </field>
+            <field name="extras">
+                <value>newField_1</value>
+                <value>secret</value>
+            </field>
+        </pv>
     </sink>
         <source in="getMyLocation" method="&lt;android.app.Activity: java.lang.Object         getSystemService(java.lang.String)&gt;" />
         <source in="getMyLocation" method="&lt;android.location.Location:         double getLatitude()&gt;" />
